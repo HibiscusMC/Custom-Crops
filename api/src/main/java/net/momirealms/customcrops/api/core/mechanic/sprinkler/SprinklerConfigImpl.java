@@ -36,6 +36,7 @@ public class SprinklerConfigImpl implements SprinklerConfig {
     private final ExistenceForm existenceForm;
     private final int storage;
     private final int[][] range;
+    private final int rawRange;
     private final boolean infinite;
     private final int wateringAmount;
     private final int sprinklingAmount;
@@ -63,6 +64,7 @@ public class SprinklerConfigImpl implements SprinklerConfig {
             ExistenceForm existenceForm,
             int storage,
             int[][] range,
+            int rawRange,
             boolean infinite,
             int wateringAmount,
             int sprinklingAmount,
@@ -88,6 +90,7 @@ public class SprinklerConfigImpl implements SprinklerConfig {
         this.existenceForm = existenceForm;
         this.storage = storage;
         this.range = range;
+        this.rawRange = rawRange;
         this.infinite = infinite;
         this.wateringAmount = wateringAmount;
         this.sprinklingAmount = sprinklingAmount;
@@ -126,6 +129,11 @@ public class SprinklerConfigImpl implements SprinklerConfig {
     @Override
     public int[][] range() {
         return range;
+    }
+
+    @Override
+    public int rawRange() {
+        return rawRange;
     }
 
     @Override
@@ -249,6 +257,7 @@ public class SprinklerConfigImpl implements SprinklerConfig {
         private ExistenceForm existenceForm;
         private int storage;
         private int[][] range;
+        private int rawRange;
         private boolean infinite;
         private int wateringAmount;
         private int sprinklingAmount;
@@ -272,7 +281,7 @@ public class SprinklerConfigImpl implements SprinklerConfig {
 
         @Override
         public SprinklerConfig build() {
-            return new SprinklerConfigImpl(id, existenceForm, storage, range, infinite, wateringAmount, sprinklingAmount, potWhitelist, waterBar, twoDItem, threeDItem, threeDItemWithWater,
+            return new SprinklerConfigImpl(id, existenceForm, storage, range, rawRange, infinite, wateringAmount, sprinklingAmount, potWhitelist, waterBar, twoDItem, threeDItem, threeDItemWithWater,
                     placeRequirements, breakRequirements, useRequirements, tickRequirements, workActions, interactActions, reachLimitActions, addWaterActions, placeActions, breakActions, fullWaterActions, wateringMethods);
         }
 
@@ -297,6 +306,12 @@ public class SprinklerConfigImpl implements SprinklerConfig {
         @Override
         public Builder range(int[][] range) {
             this.range = range;
+            return this;
+        }
+
+        @Override
+        public Builder rawRange(int range) {
+            this.rawRange = range;
             return this;
         }
 

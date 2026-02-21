@@ -57,6 +57,7 @@ public class PotConfigImpl implements PotConfig {
     private final Action<Player>[] addWaterActions;
     private final Action<Player>[] fullWaterActions;
     private final Action<Player>[] maxFertilizerActions;
+    private final double[] unparsedRatios;
 
     public PotConfigImpl(
             String id,
@@ -82,7 +83,8 @@ public class PotConfigImpl implements PotConfig {
             Action<Player>[] addWaterActions,
             Action<Player>[] fullWaterActions,
             Action<Player>[] maxFertilizerActions,
-            List<String> vanillaPots
+            List<String> vanillaPots,
+            double[] unparsedRatios
     ) {
         this.id = id;
         this.vanillaFarmland = vanillaFarmland;
@@ -130,6 +132,8 @@ public class PotConfigImpl implements PotConfig {
         } else {
             disablePluginSystem = false;
         }
+
+        this.unparsedRatios = unparsedRatios;
     }
 
     @Override
@@ -263,6 +267,11 @@ public class PotConfigImpl implements PotConfig {
         return maxFertilizerActions;
     }
 
+    @Override
+    public double[] unparsedRatios() {
+        return unparsedRatios;
+    }
+
     public static class BuilderImpl implements Builder {
 
         private String id;
@@ -289,10 +298,11 @@ public class PotConfigImpl implements PotConfig {
         private Action<Player>[] fullWaterActions;
         private Action<Player>[] maxFertilizerActions;
         private List<String> vanillaPots = new ArrayList<>();
+        private double[] unparsedRatios;
 
         @Override
         public PotConfig build() {
-            return new PotConfigImpl(id, vanillaFarmland, basicAppearance, potAppearanceMap, storage, isRainDropAccepted, isNearbyWaterAccepted, ignoreRandomTick, ignoreScheduledTick, wateringMethods, waterBar, maxFertilizers, placeRequirements, breakRequirements, useRequirements, tickActions, reachLimitActions, interactActions, placeActions, breakActions, addWaterActions, fullWaterActions, maxFertilizerActions, vanillaPots);
+            return new PotConfigImpl(id, vanillaFarmland, basicAppearance, potAppearanceMap, storage, isRainDropAccepted, isNearbyWaterAccepted, ignoreRandomTick, ignoreScheduledTick, wateringMethods, waterBar, maxFertilizers, placeRequirements, breakRequirements, useRequirements, tickActions, reachLimitActions, interactActions, placeActions, breakActions, addWaterActions, fullWaterActions, maxFertilizerActions, vanillaPots, unparsedRatios);
         }
 
         @Override
@@ -436,6 +446,12 @@ public class PotConfigImpl implements PotConfig {
         @Override
         public Builder potAppearanceMap(HashMap<FertilizerType, Pair<String, String>> potAppearanceMap) {
             this.potAppearanceMap = potAppearanceMap;
+            return this;
+        }
+
+        @Override
+        public Builder unparsedRatios(double[] ratios) {
+            this.unparsedRatios = ratios;
             return this;
         }
     }

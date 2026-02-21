@@ -53,6 +53,10 @@ public interface SprinklerConfig {
      * @return A 2D array representing the offsets of the target blocks.
      */
     int[][] range();
+    // Hibiscus start - implement raw range
+
+    int rawRange();
+    // Hibiscus end
 
     /**
      * Checks if the sprinkler has infinite water capacity.
@@ -279,6 +283,10 @@ public interface SprinklerConfig {
          * @return The current instance of the Builder.
          */
         Builder range(int[][] range);
+        // Hibiscus start - implement raw range
+
+        Builder rawRange(int range);
+        // Hibiscus end
 
         /**
          * Specifies whether the sprinkler has an infinite water supply.

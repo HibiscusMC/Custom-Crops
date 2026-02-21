@@ -58,7 +58,8 @@ public class FertilizerType {
                         pam.parseActions(section.getSection("events.use")),
                         pam.parseActions(section.getSection("events.wrong_pot")),
                         section.getDouble("chance", 1d),
-                        manager.getQualityRatio(section.getString("ratio"))
+                        manager.getQualityRatio(section.getString("ratio")),
+                        manager.parseQualityRatios(section.getString("ratio"))
                 );
             }
     );

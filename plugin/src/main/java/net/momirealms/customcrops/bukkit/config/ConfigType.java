@@ -138,6 +138,7 @@ public class ConfigType {
                                 section.getString("water-bar.full", ""),
                                 section.getString("water-bar.right", "")
                         ) : null)
+                        .unparsedRatios(manager.parseQualityRatios(section.getString("quality-ratio")))
                         .build();
 
                 manager.registerPotConfig(config);
@@ -276,6 +277,7 @@ public class ConfigType {
                 SprinklerConfig config = SprinklerConfig.builder()
                         .id(id)
                         .range(range)
+                        .rawRange(rangeValue)
                         .storage(section.getInt("storage", 4))
                         .infinite(section.getBoolean("infinite", false))
                         .twoDItem(section.getString("2D-item"))

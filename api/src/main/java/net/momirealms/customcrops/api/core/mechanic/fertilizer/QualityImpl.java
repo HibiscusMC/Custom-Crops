@@ -27,6 +27,7 @@ public class QualityImpl extends AbstractFertilizerConfig implements Quality {
 
     private final double chance;
     private final double[] ratio;
+    private final double[] unparsedRatio;
 
     protected QualityImpl(
             String id,
@@ -40,11 +41,13 @@ public class QualityImpl extends AbstractFertilizerConfig implements Quality {
             Action<Player>[] useActions,
             Action<Player>[] wrongPotActions,
             double chance,
-            double[] ratio
+            double[] ratio,
+            double[] unparsedRatio
     ) {
         super(id, itemID, times, icon, beforePlant, whitelistPots, requirements, beforePlantActions, useActions, wrongPotActions);
         this.chance = chance;
         this.ratio = ratio;
+        this.unparsedRatio = unparsedRatio;
     }
 
     @Override
@@ -55,6 +58,11 @@ public class QualityImpl extends AbstractFertilizerConfig implements Quality {
     @Override
     public double[] ratio() {
         return ratio;
+    }
+
+    @Override
+    public double[] unparsedRatios() {
+        return unparsedRatio;
     }
 
     @Override

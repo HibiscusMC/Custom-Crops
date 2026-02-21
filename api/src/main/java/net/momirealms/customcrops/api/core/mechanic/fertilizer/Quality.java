@@ -29,6 +29,8 @@ public interface Quality extends FertilizerConfig {
 
     double[] ratio();
 
+    double[] unparsedRatios();
+
     static Quality create(
             String id,
             String itemID,
@@ -41,8 +43,9 @@ public interface Quality extends FertilizerConfig {
             Action<Player>[] useActions,
             Action<Player>[] wrongPotActions,
             double chance,
-            double[] ratio
+            double[] ratio,
+            double[] unparsedRatio
     ) {
-        return new QualityImpl(id, itemID, times, icon, beforePlant, whitelistPots, requirements, beforePlantActions, useActions, wrongPotActions, chance, ratio);
+        return new QualityImpl(id, itemID, times, icon, beforePlant, whitelistPots, requirements, beforePlantActions, useActions, wrongPotActions, chance, ratio, unparsedRatio);
     }
 }

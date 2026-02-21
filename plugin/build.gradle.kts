@@ -1,3 +1,7 @@
+plugins {
+    id("xyz.jpenilla.run-paper") version "2.3.1"
+}
+
 repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
@@ -11,7 +15,7 @@ dependencies {
     // Platform
     compileOnly("dev.folia:folia-api:1.20.4-R0.1-SNAPSHOT")
     // Some sub projects
-    implementation(project(":api"))  {
+    implementation(project(":api")) {
         exclude("dev.dejvokep", "boosted-yaml")
     }
     implementation(project(":compatibility"))
@@ -40,6 +44,10 @@ dependencies {
 }
 
 tasks {
+    runServer {
+        minecraftVersion("1.21.11")
+    }
+
     shadowJar {
         from(zipTree(project(":compatibility-nexo-r1").tasks.jar.get().archiveFile))
         from(zipTree(project(":compatibility-oraxen-r1").tasks.jar.get().archiveFile))

@@ -206,6 +206,8 @@ public interface PotConfig {
      */
     Action<Player>[] maxFertilizerActions();
 
+    double[] unparsedRatios();
+
     /**
      * Creates a new builder instance for constructing a {@link PotConfig}.
      *
@@ -418,5 +420,7 @@ public interface PotConfig {
          * @return The current instance of the Builder.
          */
         Builder potAppearanceMap(HashMap<FertilizerType, Pair<String, String>> potAppearanceMap);
+
+        Builder unparsedRatios(double[] unparsedRatios);
     }
 }

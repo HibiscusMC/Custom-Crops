@@ -132,6 +132,11 @@ public abstract class AbstractFertilizerConfig implements FertilizerConfig {
     }
 
     @Override
+    public double[] unparsedRatios() {
+        return null;
+    }
+
+    @Override
     public double[] overrideQualityRatio() {
         return null;
     }

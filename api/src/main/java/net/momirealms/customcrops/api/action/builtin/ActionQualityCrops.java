@@ -43,6 +43,7 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,10 +67,10 @@ public class ActionQualityCrops<T> extends AbstractBuiltInAction<T> {
         this.toInv = section.getBoolean("to-inventory", false);
         this.qualityLoots = new String[ConfigManager.defaultQualityRatio().length];
         for (int i = 1; i <= ConfigManager.defaultQualityRatio().length; i++) {
-            qualityLoots[i-1] = section.getString("items." + i);
-            if (qualityLoots[i-1] == null) {
+            qualityLoots[i - 1] = section.getString("items." + i);
+            if (qualityLoots[i - 1] == null) {
                 plugin.getPluginLogger().warn("items." + i + " should not be null");
-                qualityLoots[i-1] = "";
+                qualityLoots[i - 1] = "";
             }
         }
     }
@@ -112,6 +113,10 @@ public class ActionQualityCrops<T> extends AbstractBuiltInAction<T> {
         if (world.isEmpty()) {
             return List.of();
         }
+
+        double[][] unparsedRatios = new double[3][];
+        boolean useCustomRatios = false;
+
         Pos3 pos3 = Pos3.from(location);
         Fertilizer[] fertilizers = null;
         Pos3 potLocation = pos3.add(0, -1, 0);
@@ -120,6 +125,12 @@ public class ActionQualityCrops<T> extends AbstractBuiltInAction<T> {
             Optional<CustomCropsBlockState> state = chunk.get().getBlockState(potLocation);
             if (state.isPresent()) {
                 if (state.get().type() instanceof PotBlock potBlock) {
+                    double[] unparsedBlockRatios = potBlock.config(state.get()).unparsedRatios();
+                    if (unparsedBlockRatios != null) {
+                        useCustomRatios = true;
+                        unparsedRatios[0] = unparsedBlockRatios;
+                    }
+
                     fertilizers = potBlock.fertilizers(state.get());
                 }
             }
@@ -130,16 +141,30 @@ public class ActionQualityCrops<T> extends AbstractBuiltInAction<T> {
                 Optional.ofNullable(fertilizer.config()).ifPresent(configs::add);
             }
         }
+
         for (FertilizerConfig config : configs) {
+            double[] unparsedFertilizerRatios = config.unparsedRatios();
+            if (unparsedFertilizerRatios != null) {
+                useCustomRatios = true;
+                unparsedRatios[1] = unparsedFertilizerRatios;
+            }
+
             randomAmount = config.processDroppedItemAmount(randomAmount);
             double[] newRatio = config.overrideQualityRatio();
             if (newRatio != null) {
                 ratio = newRatio;
             }
         }
+
+        if (useCustomRatios) {
+            ratio = plugin.getConfigManager().getQualityRatio(unparsedRatios);
+        }
+
         ArrayList<ItemStack> droppedItems = new ArrayList<>();
         outer:
-        for (int i = 0; i < randomAmount; i++) {
+        for (
+                int i = 0;
+                i < randomAmount; i++) {
             double r1 = Math.random();
             for (int j = 0; j < ratio.length; j++) {
                 if (r1 < ratio[j]) {

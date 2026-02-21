@@ -43,16 +43,45 @@ import net.momirealms.customcrops.api.requirement.RequirementManager;
 import net.momirealms.customcrops.api.util.EventUtils;
 import net.momirealms.customcrops.api.util.LocationUtils;
 import net.momirealms.customcrops.api.util.PlayerUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
+import org.bukkit.SoundCategory;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class SprinklerBlock extends AbstractCustomCropsBlock {
 
+    // Hibiscus start - Custom sprinkler effects
+    /**
+     * {@link Pos3} - The sprinkler position
+     * <p>
+     * {@link SprinklerConfig} - The config for this sprinkler
+     */
+    private final static Map<Pos3, SprinklerConfig> SPRINKLER_EFFECTS
+            = new HashMap<>();
+    /**
+     * {@link Pos3} - The sprinkler position
+     * <p>
+     * {@link BukkitTask} - The bukkit task associated with this sprinkler effect
+     */
+    private final static Map<Pos3, BukkitTask> SPRINKLER_TASKS
+            = new HashMap<>();
+
+    // Hibiscus end
     public SprinklerBlock() {
         super(BuiltInBlockMechanics.SPRINKLER.key());
     }
@@ -74,6 +103,75 @@ public class SprinklerBlock extends AbstractCustomCropsBlock {
             tickSprinkler(state, world, location, offlineTick);
         }
     }
+    // Hibiscus start - Custom sprinkler effects
+
+    private void tickSprinklerEffect(@NotNull CustomCropsWorld<?> world, @NotNull Pos3 location) {
+        if (SPRINKLER_TASKS.containsKey(location)) {
+            return;
+        }
+
+        SprinklerConfig config = SPRINKLER_EFFECTS.get(location);
+
+        Plugin plugin = BukkitCustomCropsPlugin.getInstance().getBootstrap();
+
+        World bukkitWorld = world.bukkitWorld();
+        Location bukkitLocation = location.toLocation(bukkitWorld);
+
+        BukkitTask task = new BukkitRunnable() {
+            private final int size = config.rawRange();
+
+            private double currentRotation = 0.0;
+            private double currentSize = 0.0;
+
+            @Override
+            public void run() {
+                List<Player> targets = new ArrayList<>();
+                double radiusSq = 10 * 10;
+
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    if (player.getWorld().equals(bukkitWorld) && player.getLocation().distanceSquared(bukkitLocation) <= radiusSq) {
+                        targets.add(player);
+                    }
+                }
+
+                Location loc = bukkitLocation.clone();
+                loc.add(0.5, 0, 0.5);
+
+                double height = 0.5;
+                for (double i = 0.0; i < currentSize; i += 0.1) {
+                    if (i < size * 0.4) {
+                        height += 0.05;
+                    } else if (i >= size * 0.6) {
+                        height -= 0.1;
+                    } else {
+                        height += 0.025;
+                    }
+
+                    for (double d = 1; d <= 8; d++) {
+                        Location particleLoc = loc.clone();
+
+                        double diff = ((d / 8) * 90 * 9) + currentRotation;
+                        particleLoc.add(Math.cos(diff) * i, height, Math.sin(diff) * i);
+
+                        for (Player player : targets) {
+                            player.playSound(bukkitLocation, Sound.BLOCK_POINTED_DRIPSTONE_DRIP_WATER, SoundCategory.BLOCKS, 1, 1);
+                            player.spawnParticle(Particle.WATER_DROP, particleLoc, 1, 0, 0, 0, 0);
+                        }
+                    }
+                }
+
+                currentSize += 0.1;
+                currentRotation += 0.05;
+                if (currentSize >= size) {
+                    this.cancel();
+                    SPRINKLER_TASKS.remove(location);
+                }
+            }
+        }.runTaskTimerAsynchronously(plugin, 0L, 1L);
+
+        SPRINKLER_TASKS.put(location, task);
+    }
+    // Hibiscus end
 
     @Override
     public void onBreak(WrappedBreakEvent event) {
@@ -299,12 +397,18 @@ public class SprinklerBlock extends AbstractCustomCropsBlock {
                 String modelID = BukkitCustomCropsPlugin.getInstance().getItemManager().id(bukkitLocation, config.existenceForm());
                 if (modelID == null || !config.modelIDs().contains(modelID)) {
                     world.removeBlockState(location);
-                    BukkitCustomCropsPlugin.getInstance().getPluginLogger().warn("Sprinkler[" + config.id() + "] is removed at Location["  +  world.worldName() + "," + location + "] because the id of the block/furniture is " + modelID);
+                    BukkitCustomCropsPlugin.getInstance().getPluginLogger().warn("Sprinkler[" + config.id() + "] is removed at Location[" + world.worldName() + "," + location + "] because the id of the block/furniture is " + modelID);
                     return;
                 }
             }
 
             ActionManager.trigger(context, config.workActions());
+            // Hibiscus start - Custom sprinkler effects
+
+            SPRINKLER_EFFECTS.put(location, config);
+            tickSprinklerEffect(world, location);
+
+            // Hibiscus end
             if (updateState && !config.threeDItem().equals(config.threeDItemWithWater())) {
                 updateBlockAppearance(bukkitLocation, config, false);
             }
@@ -316,7 +420,7 @@ public class SprinklerBlock extends AbstractCustomCropsBlock {
                 int x = range[i][0];
                 int z = range[i][1];
                 pos3s[i] = location.add(x, 0, z);
-                pos3s[i+length] = location.add(x, -1, z);
+                pos3s[i + length] = location.add(x, -1, z);
             }
 
             for (Pos3 pos3 : pos3s) {

@@ -390,6 +390,67 @@ public abstract class ConfigManager implements ConfigLoader, Reloadable {
         return map;
     }
 
+    public double[] getQualityRatio(double[][] ratioList) {
+        if (ratioList == null || ratioList.length == 0) {
+            return new double[0];
+        }
+
+        int maxLength = 0;
+        for (double[] ratios : ratioList) {
+            if (ratios == null) {
+                continue;
+            }
+
+            maxLength = Math.max(maxLength, ratios.length);
+        }
+
+        double[] combinedWeights = new double[maxLength];
+
+        for (double[] ratios : ratioList) {
+            if (ratios == null) {
+                continue;
+            }
+
+            for (int i = 0; i < ratios.length; i++) {
+                combinedWeights[i] += ratios[i];
+            }
+        }
+
+        double totalWeight = 0;
+        for (double weight : combinedWeights) {
+            totalWeight += weight;
+        }
+
+        if (totalWeight <= 0) {
+            return new double[]{1.0};
+        }
+
+        double[] finalThresholds = new double[maxLength];
+        double runningSum = 0;
+
+        for (int i = 0; i < maxLength; i++) {
+            runningSum += combinedWeights[i];
+            finalThresholds[i] = runningSum / totalWeight;
+        }
+
+        return finalThresholds;
+    }
+
+    public double[] parseQualityRatios(String ratios) {
+        if (ratios == null) {
+            return null;
+        }
+
+        String[] split = ratios.split("/");
+        double[] ratio = new double[split.length];
+
+        for (int i = 0; i < split.length; i++) {
+            ratio[i] = Double.parseDouble(split[i]);
+        }
+
+        return ratio;
+    }
+
     public double[] getQualityRatio(String ratios) {
         String[] split = ratios.split("/");
         double[] ratio = new double[split.length];
@@ -443,10 +504,10 @@ public abstract class ConfigManager implements ConfigLoader, Reloadable {
                 if (entry.getValue() instanceof Section innerSection) {
                     BoneMeal boneMeal = new BoneMeal(
                             Preconditions.checkNotNull(innerSection.getString("item"), "Bone meal item can't be null"),
-                            innerSection.getInt("item-amount",1),
+                            innerSection.getInt("item-amount", 1),
                             innerSection.getString("return"),
-                            innerSection.getInt("return-amount",1),
-                            innerSection.getBoolean("dispenser",true),
+                            innerSection.getInt("return-amount", 1),
+                            innerSection.getBoolean("dispenser", true),
                             getIntChancePair(innerSection.getSection("chance")),
                             plugin.getActionManager(Player.class).parseActions(innerSection.getSection("actions"))
                     );
