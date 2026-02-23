@@ -122,7 +122,8 @@ public class WateringCanItem extends AbstractCustomCropsItem {
         if (config == null)
             return;
 
-        final Player player = event.player();;
+        final Player player = event.player();
+
         Context<Player> context = Context.player(player);
         context.arg(ContextKeys.SLOT, event.hand());
         // check requirements
@@ -139,7 +140,7 @@ public class WateringCanItem extends AbstractCustomCropsItem {
             return;
         final Vector vector = result.getHitPosition();
         // for old config compatibility
-        context.updateLocation(new Location(player.getWorld(), vector.getX() - 0.5,vector.getY() - 1, vector.getZ() - 0.5));
+        context.updateLocation(new Location(player.getWorld(), vector.getX() - 0.5, vector.getY() - 1, vector.getZ() - 0.5));
 
         final ItemStack itemInHand = event.itemInHand();
         int water = getCurrentWater(itemInHand);
@@ -286,7 +287,7 @@ public class WateringCanItem extends AbstractCustomCropsItem {
         List<CropConfig> cropConfigs = Registries.STAGE_TO_CROP_UNSAFE.get(targetBlockID);
         if (cropConfigs != null || Registries.ITEM_TO_DEAD_CROP.containsKey(targetBlockID) || VANILLA_CROP_STATES.contains(targetBlockID)) {
             // is a crop
-            targetLocation = targetLocation.subtract(0,1,0);
+            targetLocation = targetLocation.subtract(0, 1, 0);
             targetBlockID = BukkitCustomCropsPlugin.getInstance().getItemManager().blockID(targetLocation);
             blockFace = BlockFace.UP;
         }
@@ -310,7 +311,8 @@ public class WateringCanItem extends AbstractCustomCropsItem {
             }
 
             World bukkitWorld = targetLocation.getWorld();
-            ArrayList<Pair<Pos3, String>> pots = potInRange(bukkitWorld, Pos3.from(targetLocation), wateringCanConfig.width(), wateringCanConfig.length(), player.getLocation().getYaw(), potConfig);
+//            ArrayList<Pair<Pos3, String>> pots = potInRange(bukkitWorld, Pos3.from(targetLocation), wateringCanConfig.width(), wateringCanConfig.length(), player.getLocation().getYaw(), potConfig);
+            List<Pair<Pos3, String>> pots = potsInArea(bukkitWorld, Pos3.from(targetLocation), wateringCanConfig.width(), wateringCanConfig.length(), potConfig);
 
             WateringCanWaterPotEvent waterPotEvent = new WateringCanWaterPotEvent(player, itemInHand, event.hand(), wateringCanConfig, potConfig, pots);
             if (EventUtils.fireAndCheckCancel(waterPotEvent)) {
@@ -323,7 +325,7 @@ public class WateringCanItem extends AbstractCustomCropsItem {
 
             PotBlock potBlock = (PotBlock) BuiltInBlockMechanics.POT.mechanic();
             for (Pair<Pos3, String> pair : waterPotEvent.pots()) {
-                CustomCropsBlockState potState = potBlock.fixOrGetState(world,pair.left(), potConfig, pair.right());
+                CustomCropsBlockState potState = potBlock.fixOrGetState(world, pair.left(), potConfig, pair.right());
                 Location temp = pair.left().toLocation(bukkitWorld);
                 if (potBlock.addWater(potState, potConfig, wateringCanConfig.wateringAmount())) {
                     potBlock.updateBlockAppearance(temp, potConfig, true, potBlock.fertilizers(potState));
@@ -369,7 +371,7 @@ public class WateringCanItem extends AbstractCustomCropsItem {
             return InteractionResult.COMPLETE;
         final Vector vector = result.getHitPosition();
         // for old config compatibility
-        context.updateLocation(new Location(player.getWorld(), vector.getX() - 0.5,vector.getY() - 1, vector.getZ() - 0.5));
+        context.updateLocation(new Location(player.getWorld(), vector.getX() - 0.5, vector.getY() - 1, vector.getZ() - 0.5));
         String blockID = BukkitCustomCropsPlugin.getInstance().getItemManager().blockID(targetBlock);
         String finalBlockID = blockID;
         BukkitCustomCropsPlugin.getInstance().debug(() -> finalBlockID);
@@ -428,10 +430,32 @@ public class WateringCanItem extends AbstractCustomCropsItem {
         return InteractionResult.COMPLETE;
     }
 
-    public ArrayList<Pair<Pos3, String>> potInRange(World world, Pos3 pos3, int width, int length, float yaw, PotConfig config) {
+    public List<Pair<Pos3, String>> potsInArea(World world, Pos3 pos3, int width, int length, PotConfig config) {
+        List<Pair<Pos3, String>> pots = new ArrayList<>();
+
+        ItemManager itemManager = BukkitCustomCropsPlugin.getInstance().getItemManager();
+        for (int i = -width; i <= width; i++) {
+            for (int j = -length; j <= length; j++) {
+                Pos3 loc = new Pos3(pos3.x() + i, pos3.y(), pos3.z() + j);
+
+                Block block = world.getBlockAt(loc.x(), loc.y(), loc.z());
+                String blockID = itemManager.blockID(block);
+                PotConfig potConfig = Registries.ITEM_TO_POT.get(blockID);
+
+                if (potConfig == config) {
+                    pots.add(Pair.of(loc, blockID));
+                }
+            }
+        }
+
+        return pots;
+    }
+
+    public ArrayList<Pair<Pos3, String>> potInRange(World world, Pos3 pos3, int width, int length,
+                                                    float yaw, PotConfig config) {
         ArrayList<Pos3> potPos = new ArrayList<>();
-        int extend = (width-1) / 2;
-        int extra = (width-1) % 2;
+        int extend = (width - 1) / 2;
+        int extra = (width - 1) % 2;
         switch ((int) ((yaw + 180) / 45)) {
             case 0 -> {
                 // -180 ~ -135
