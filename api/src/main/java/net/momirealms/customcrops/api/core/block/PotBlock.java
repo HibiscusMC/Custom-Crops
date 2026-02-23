@@ -342,7 +342,7 @@ public class PotBlock extends AbstractCustomCropsBlock {
             itemDisplay.setTransformation(new Transformation(
                     new Vector3f(0.5f, -0.5f, 0.5f),
                     new AxisAngle4f(0, 0, 0, 0),
-                    new Vector3f(1, 1, 1),
+                    new Vector3f(0.999f, 0.999f, 0.999f),
                     new AxisAngle4f(0, 0, 0, 0)
             ));
 
