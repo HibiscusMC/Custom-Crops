@@ -42,12 +42,14 @@ import net.momirealms.sparrow.heart.SparrowHeart;
 import net.momirealms.sparrow.heart.feature.inventory.HandSlot;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.SoundCategory;
 import org.bukkit.entity.ExperienceOrb;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.intellij.lang.annotations.Subst;
 
 import java.util.List;
 import java.util.Locale;
@@ -364,8 +366,10 @@ public class PlayerActionManager extends AbstractActionManager<Player> {
             if (args instanceof Section section) {
                 MathValue<Player> volume = MathValue.auto(section.get("volume", 1));
                 MathValue<Player> pitch = MathValue.auto(section.get("pitch", 1));
-                Key key = Key.key(section.getString("key"));
-                Sound.Source source = Sound.Source.valueOf(section.getString("source", "PLAYER").toUpperCase(Locale.ENGLISH));
+                @Subst("minecraft:key") String rawKey = section.getString("key");
+                Key key = Key.key(rawKey);
+                String rawSource = section.getString("source", "PLAYER").toUpperCase();
+                Sound.Source source = Sound.Source.valueOf(rawSource);
                 String playTo = section.getString("audience", "PLAYER")
                         .toUpperCase();
                 if (!playTo.equalsIgnoreCase("PLAYER") && !playTo.equalsIgnoreCase("WORLD")) {
@@ -385,7 +389,10 @@ public class PlayerActionManager extends AbstractActionManager<Player> {
                         Player player = context.holder();
 
                         Location loc = player.getLocation();
-                        loc.getWorld().playSound(sound, loc.getX(), loc.getY(), loc.getZ());
+                        loc.getWorld().playSound(
+                                loc, rawKey, SoundCategory.valueOf(rawSource),
+                                sound.volume(), sound.pitch()
+                        );
                     } else {
                         Audience audience = plugin.getSenderFactory().getAudience(context.holder());
                         AdventureHelper.playSound(audience, sound);
