@@ -290,7 +290,8 @@ public abstract class AbstractRequirementManager<T> implements RequirementManage
             if (args instanceof Section section) {
                 Requirement<T>[] requirements = parseRequirements(section, runActions);
                 return context -> {
-                    outer: {
+                    outer:
+                    {
                         for (Requirement<T> requirement : requirements)
                             if (!requirement.isSatisfied(context))
                                 break outer;
@@ -448,7 +449,7 @@ public abstract class AbstractRequirementManager<T> implements RequirementManage
                     if (world.isPresent()) {
                         CustomCropsWorld<?> cropsWorld = world.get();
                         for (int i = 1, range = ConfigManager.greenhouseRange(); i <= range; i++) {
-                            Optional<CustomCropsBlockState> optionalState = cropsWorld.getBlockState(pos3.add(0,i,0));
+                            Optional<CustomCropsBlockState> optionalState = cropsWorld.getBlockState(pos3.add(0, i, 0));
                             if (optionalState.isPresent()) {
                                 if (optionalState.get().type() instanceof GreenhouseBlock) {
                                     return true;
@@ -473,7 +474,7 @@ public abstract class AbstractRequirementManager<T> implements RequirementManage
                         if (world.isPresent()) {
                             CustomCropsWorld<?> cropsWorld = world.get();
                             for (int i = 1, range = ConfigManager.greenhouseRange(); i <= range; i++) {
-                                Optional<CustomCropsBlockState> optionalState = cropsWorld.getBlockState(pos3.add(0,i,0));
+                                Optional<CustomCropsBlockState> optionalState = cropsWorld.getBlockState(pos3.add(0, i, 0));
                                 if (optionalState.isPresent()) {
                                     if (optionalState.get().type() instanceof GreenhouseBlock) {
                                         if (runActions) ActionManager.trigger(context, actions);
@@ -740,7 +741,7 @@ public abstract class AbstractRequirementManager<T> implements RequirementManage
                 int y = section.getInt("y", 0);
                 HashSet<String> types = new HashSet<>(ListUtils.toList(section.get("type")).stream().map(str -> str.toUpperCase(Locale.ENGLISH)).toList());
                 return context -> {
-                    Location location = requireNonNull(context.arg(ContextKeys.LOCATION)).clone().add(0,y,0);
+                    Location location = requireNonNull(context.arg(ContextKeys.LOCATION)).clone().add(0, y, 0);
                     Optional<CustomCropsWorld<?>> optionalWorld = plugin.getWorldManager().getWorld(location.getWorld());
                     if (optionalWorld.isEmpty()) {
                         return false;
@@ -769,7 +770,8 @@ public abstract class AbstractRequirementManager<T> implements RequirementManage
                                         }
                                     }
                                 } else {
-                                    outer: {
+                                    outer:
+                                    {
                                         for (Fertilizer fertilizer : fertilizers) {
                                             FertilizerConfig config = fertilizer.config();
                                             if (config != null) {
@@ -798,7 +800,7 @@ public abstract class AbstractRequirementManager<T> implements RequirementManage
                 int y = section.getInt("y", 0);
                 HashSet<String> keys = new HashSet<>(ListUtils.toList(section.get("key")));
                 return context -> {
-                    Location location = requireNonNull(context.arg(ContextKeys.LOCATION)).clone().add(0,y,0);
+                    Location location = requireNonNull(context.arg(ContextKeys.LOCATION)).clone().add(0, y, 0);
                     Pos3 pos3 = Pos3.from(location);
                     Optional<CustomCropsWorld<?>> optionalWorld = plugin.getWorldManager().getWorld(location.getWorld());
                     if (optionalWorld.isEmpty()) {
@@ -824,7 +826,8 @@ public abstract class AbstractRequirementManager<T> implements RequirementManage
                                         }
                                     }
                                 } else {
-                                    outer: {
+                                    outer:
+                                    {
                                         for (Fertilizer fertilizer : fertilizers) {
                                             if (keys.contains(fertilizer.id())) {
                                                 break outer;
@@ -844,6 +847,38 @@ public abstract class AbstractRequirementManager<T> implements RequirementManage
                 return Requirement.empty();
             }
         }, "fertilizer");
+        registerRequirement((args, actions, advanced) -> {
+            if (args instanceof Section section) {
+                int has = section.getInt("has", 0);
+                int y = section.getInt("y", 0);
+                return context -> {
+                    Location location = requireNonNull(context.arg(ContextKeys.LOCATION)).clone().add(0, y, 0);
+                    Pos3 pos3 = Pos3.from(location);
+
+                    Optional<CustomCropsWorld<?>> optionalWorld = plugin.getWorldManager().getWorld(location.getWorld());
+                    if (optionalWorld.isEmpty()) {
+                        return false;
+
+                    }
+
+                    CustomCropsWorld<?> world = optionalWorld.get();
+                    Optional<CustomCropsBlockState> optionalState = world.getBlockState(pos3);
+
+                    if (optionalState.isPresent()) {
+                        if (optionalState.get().type() instanceof PotBlock potBlock) {
+                            Fertilizer[] fertilizers = potBlock.fertilizers(optionalState.get());
+
+                            return has == fertilizers.length;
+                        }
+                    }
+                    if (advanced) ActionManager.trigger(context, actions);
+                    return false;
+                };
+            } else {
+                plugin.getPluginLogger().warn("Invalid value type: " + args.getClass().getSimpleName() + " found at fertilizer-amount requirement which is expected be `Section`");
+                return Requirement.empty();
+            }
+        }, "fertilizer-amount");
     }
 
     protected void registerLightRequirement() {
@@ -946,7 +981,7 @@ public abstract class AbstractRequirementManager<T> implements RequirementManage
                 int y = section.getInt("y", 0);
                 HashSet<String> ids = new HashSet<>(ListUtils.toList(section.get("id")));
                 return context -> {
-                    Location location = requireNonNull(context.arg(ContextKeys.LOCATION)).clone().add(0,y,0);
+                    Location location = requireNonNull(context.arg(ContextKeys.LOCATION)).clone().add(0, y, 0);
                     Pos3 pos3 = Pos3.from(location);
                     Optional<CustomCropsWorld<?>> optionalWorld = plugin.getWorldManager().getWorld(location.getWorld());
                     if (optionalWorld.isEmpty()) {
@@ -989,7 +1024,7 @@ public abstract class AbstractRequirementManager<T> implements RequirementManage
                             int range = ConfigManager.scarecrowRange();
                             for (int i = -range; i <= range; i++) {
                                 for (int j = -range; j <= range; j++) {
-                                    for (int k : new int[]{0,-1,1}) {
+                                    for (int k : new int[]{0, -1, 1}) {
                                         Pos3 tempPos3 = pos3.add(i, k, j);
                                         Optional<CustomCropsChunk> optionalChunk = customCropsWorld.getLoadedChunk(tempPos3.toChunkPos());
                                         if (optionalChunk.isPresent()) {

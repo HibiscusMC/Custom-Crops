@@ -18,6 +18,7 @@
 package net.momirealms.customcrops.api.core.block;
 
 import com.flowpowered.nbt.IntTag;
+import com.flowpowered.nbt.Tag;
 import net.momirealms.customcrops.api.BukkitCustomCropsPlugin;
 import net.momirealms.customcrops.api.action.ActionManager;
 import net.momirealms.customcrops.api.context.Context;
@@ -137,6 +138,22 @@ public class CropBlock extends AbstractCustomCropsBlock {
         ActionManager.trigger(context, stageConfig.breakActions());
         ActionManager.trigger(context, cropConfig.breakActions());
         world.removeBlockState(pos3);
+
+        Location potLocation = location.clone().subtract(0, 1, 0);
+        String blockBelowID = BukkitCustomCropsPlugin.getInstance().getItemManager().blockID(potLocation.getBlock());
+        PotConfig potConfig = Registries.ITEM_TO_POT.get(blockBelowID);
+
+        PotBlock potBlock = null;
+        CustomCropsBlockState potState = null;
+
+        if (potConfig != null) {
+            potBlock = (PotBlock) BuiltInBlockMechanics.POT.mechanic();
+            potState = potBlock.fixOrGetState(world, Pos3.from(potLocation), potConfig, event.brokenID());
+        }
+
+        if (potBlock != null && potState != null) {
+            potBlock.tickFertilizer(potState, state);
+        }
     }
 
     /**
@@ -230,15 +247,18 @@ public class CropBlock extends AbstractCustomCropsBlock {
             return;
         }
 
-        Location potLocation = location.clone().subtract(0,1,0);
+        Location potLocation = location.clone().subtract(0, 1, 0);
         String blockBelowID = BukkitCustomCropsPlugin.getInstance().getItemManager().blockID(potLocation.getBlock());
         PotConfig potConfig = Registries.ITEM_TO_POT.get(blockBelowID);
+        PotBlock potBlock = null;
+        CustomCropsBlockState potState = null;
+
         if (potConfig != null) {
             context.updateLocation(potLocation);
-            PotBlock potBlock = (PotBlock) BuiltInBlockMechanics.POT.mechanic();
+            potBlock = (PotBlock) BuiltInBlockMechanics.POT.mechanic();
             assert potBlock != null;
             // fix or get data
-            CustomCropsBlockState potState = potBlock.fixOrGetState(world, Pos3.from(potLocation), potConfig, event.relatedID());
+            potState = potBlock.fixOrGetState(world, Pos3.from(potLocation), potConfig, event.relatedID());
             if (potBlock.tryWateringPot(player, context, potState, event.hand(), event.itemID(), potConfig, potLocation, itemInHand))
                 return;
         }
@@ -260,6 +280,7 @@ public class CropBlock extends AbstractCustomCropsBlock {
                         }
                     }
                     boneMeal.triggerActions(context);
+                    boneMealed(state);
 
                     int afterPoints = Math.min(point + boneMeal.rollPoint(), cropConfig.maxPoints());
                     point(state, afterPoints);
@@ -393,7 +414,7 @@ public class CropBlock extends AbstractCustomCropsBlock {
             }
             if (pointToAdd == 0) return;
 
-            Optional<CustomCropsBlockState> optionalState = world.getBlockState(location.add(0,-1,0));
+            Optional<CustomCropsBlockState> optionalState = world.getBlockState(location.add(0, -1, 0));
             if (optionalState.isPresent()) {
                 CustomCropsBlockState belowState = optionalState.get();
                 if (belowState.type() instanceof PotBlock potBlock) {
@@ -403,6 +424,8 @@ public class CropBlock extends AbstractCustomCropsBlock {
                             pointToAdd = fertilizerConfig.processGainPoints(pointToAdd);
                         }
                     }
+
+                    potBlock.tickPot(belowState, world, location.add(0, -1, 0), false, tickMode, true);
                 }
             }
 
@@ -464,6 +487,19 @@ public class CropBlock extends AbstractCustomCropsBlock {
 
     public void point(CustomCropsBlockState state, int point) {
         state.set("point", new IntTag("point", point));
+    }
+
+    public boolean isBoneMealed(CustomCropsBlockState state) {
+        Tag<?> tag = state.get("bonemeal");
+        if (tag == null) {
+            return false;
+        }
+
+        return tag.getAsIntTag().map(IntTag::getValue).orElse(0) == 1;
+    }
+
+    private void boneMealed(CustomCropsBlockState state) {
+        state.set("bonemeal", new IntTag("bonemeal", 1));
     }
 
     public CropConfig config(CustomCropsBlockState state) {

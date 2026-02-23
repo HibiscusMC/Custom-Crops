@@ -51,6 +51,11 @@ public class QualityImpl extends AbstractFertilizerConfig implements Quality {
     }
 
     @Override
+    public ConsumeType consumeType() {
+        return ConsumeType.HARVEST;
+    }
+
+    @Override
     public double chance() {
         return chance;
     }

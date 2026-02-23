@@ -57,6 +57,11 @@ public class SpeedGrowImpl extends AbstractFertilizerConfig implements SpeedGrow
     }
 
     @Override
+    public ConsumeType consumeType() {
+        return ConsumeType.GROWTH;
+    }
+
+    @Override
     public FertilizerType type() {
         return FertilizerType.SPEED_GROW;
     }

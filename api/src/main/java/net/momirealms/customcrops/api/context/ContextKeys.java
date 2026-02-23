@@ -42,8 +42,14 @@ public class ContextKeys<T> {
     public static final ContextKeys<String> TEMP_NEAR_PLAYER = of("near", String.class);
     public static final ContextKeys<Boolean> OFFLINE = of("offline", Boolean.class);
     public static final ContextKeys<String> ICON = of("icon", String.class);
+    public static final ContextKeys<String> ICON_2 = of("icon_2", String.class);
+    public static final ContextKeys<String> ICON_3 = of("icon_3", String.class);
     public static final ContextKeys<Integer> MAX_TIMES = of("max_times", Integer.class);
+    public static final ContextKeys<Integer> MAX_TIMES_2 = of("max_times_2", Integer.class);
+    public static final ContextKeys<Integer> MAX_TIMES_3 = of("max_times_3", Integer.class);
     public static final ContextKeys<Integer> LEFT_TIMES = of("left_times", Integer.class);
+    public static final ContextKeys<Integer> LEFT_TIMES_2 = of("left_times_2", Integer.class);
+    public static final ContextKeys<Integer> LEFT_TIMES_3 = of("left_times_3", Integer.class);
 
     private final String key;
     private final Class<T> type;

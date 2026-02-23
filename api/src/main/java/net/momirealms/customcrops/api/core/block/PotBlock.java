@@ -18,6 +18,7 @@
 package net.momirealms.customcrops.api.core.block;
 
 import com.flowpowered.nbt.*;
+import me.lojosho.hibiscuscommons.hooks.Hooks;
 import net.momirealms.customcrops.api.BukkitCustomCropsPlugin;
 import net.momirealms.customcrops.api.action.ActionManager;
 import net.momirealms.customcrops.api.context.Context;
@@ -28,6 +29,7 @@ import net.momirealms.customcrops.api.core.ExistenceForm;
 import net.momirealms.customcrops.api.core.Registries;
 import net.momirealms.customcrops.api.core.mechanic.crop.CropConfig;
 import net.momirealms.customcrops.api.core.mechanic.crop.CropStageConfig;
+import net.momirealms.customcrops.api.core.mechanic.fertilizer.ConsumeType;
 import net.momirealms.customcrops.api.core.mechanic.fertilizer.Fertilizer;
 import net.momirealms.customcrops.api.core.mechanic.fertilizer.FertilizerConfig;
 import net.momirealms.customcrops.api.core.mechanic.pot.PotConfig;
@@ -44,25 +46,41 @@ import net.momirealms.customcrops.api.requirement.RequirementManager;
 import net.momirealms.customcrops.api.util.EventUtils;
 import net.momirealms.customcrops.api.util.LocationUtils;
 import net.momirealms.customcrops.api.util.PlayerUtils;
+import net.momirealms.customcrops.common.util.RandomUtils;
 import net.momirealms.sparrow.heart.SparrowHeart;
+import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Waterlogged;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.Transformation;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.AxisAngle4f;
+import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 public class PotBlock extends AbstractCustomCropsBlock {
+
+    private final static Map<Pos3, BukkitTask> GLOWING_BLOCKS
+            = new HashMap<>();
 
     public PotBlock() {
         super(BuiltInBlockMechanics.POT.key());
@@ -108,7 +126,7 @@ public class PotBlock extends AbstractCustomCropsBlock {
             return;
         }
 
-        Location upperLocation = location.clone().add(0,1,0);
+        Location upperLocation = location.clone().add(0, 1, 0);
 
         String upperID = BukkitCustomCropsPlugin.getInstance().getItemManager().anyID(upperLocation);
         List<CropConfig> cropConfigs = Registries.STAGE_TO_CROP_UNSAFE.get(upperID);
@@ -116,10 +134,11 @@ public class PotBlock extends AbstractCustomCropsBlock {
         CropConfig cropConfig = null;
         CropStageConfig stageConfig = null;
 
-        outer: {
+        outer:
+        {
             if (cropConfigs != null && !cropConfigs.isEmpty()) {
                 CropBlock cropBlock = (CropBlock) BuiltInBlockMechanics.CROP.mechanic();
-                CustomCropsBlockState state = cropBlock.fixOrGetState(world, pos3.add(0,1,0), upperID);
+                CustomCropsBlockState state = cropBlock.fixOrGetState(world, pos3.add(0, 1, 0), upperID);
                 if (state == null) {
                     // remove ambiguous stage
                     BukkitCustomCropsPlugin.getInstance().getItemManager().remove(upperLocation, ExistenceForm.ANY);
@@ -131,7 +150,7 @@ public class PotBlock extends AbstractCustomCropsBlock {
                     if (cropConfigs.size() != 1) {
                         // remove ambiguous stage
                         BukkitCustomCropsPlugin.getInstance().getItemManager().remove(upperLocation, ExistenceForm.ANY);
-                        world.removeBlockState(pos3.add(0,1,0));
+                        world.removeBlockState(pos3.add(0, 1, 0));
                         break outer;
                     }
                     cropConfig = cropConfigs.get(0);
@@ -171,7 +190,7 @@ public class PotBlock extends AbstractCustomCropsBlock {
         }
         if (cropConfig != null) {
             ActionManager.trigger(context, cropConfig.breakActions());
-            world.removeBlockState(pos3.add(0,1,0));
+            world.removeBlockState(pos3.add(0, 1, 0));
             BukkitCustomCropsPlugin.getInstance().getItemManager().remove(upperLocation, ExistenceForm.ANY);
         }
         if (cropConfig == null && Registries.ITEM_TO_DEAD_CROP.containsKey(upperID)) {
@@ -276,16 +295,69 @@ public class PotBlock extends AbstractCustomCropsBlock {
         context.arg(ContextKeys.WATER_BAR, Optional.ofNullable(potConfig.waterBar()).map(it -> it.getWaterBar(water, potConfig.storage())).orElse(""));
         Fertilizer[] fertilizers = fertilizers(state);
         // for backward compatibility
-        for (Fertilizer latest : fertilizers) {
-            FertilizerConfig config = latest.config();
+
+        if (fertilizers.length > 0) {
+            FertilizerConfig config = fertilizers[0].config();
             if (config != null) {
                 context.arg(ContextKeys.ICON, config.icon());
                 context.arg(ContextKeys.MAX_TIMES, config.times());
-                context.arg(ContextKeys.LEFT_TIMES, latest.times());
-                break;
+                context.arg(ContextKeys.LEFT_TIMES, fertilizers[0].times());
             }
         }
+
+        if (fertilizers.length > 1) {
+            FertilizerConfig config = fertilizers[1].config();
+            if (config != null) {
+                context.arg(ContextKeys.ICON_2, config.icon());
+                context.arg(ContextKeys.MAX_TIMES_2, config.times());
+                context.arg(ContextKeys.LEFT_TIMES_2, fertilizers[1].times());
+            }
+        }
+
+        if (fertilizers.length > 2) {
+            FertilizerConfig config = fertilizers[2].config();
+            if (config != null) {
+                context.arg(ContextKeys.ICON_3, config.icon());
+                context.arg(ContextKeys.MAX_TIMES_3, config.times());
+                context.arg(ContextKeys.LEFT_TIMES_3, fertilizers[2].times());
+            }
+        }
+
         ActionManager.trigger(context, potConfig.interactActions());
+
+        if (GLOWING_BLOCKS.containsKey(pos3)) {
+            return;
+        }
+
+        Plugin plugin = BukkitCustomCropsPlugin.getInstance().getBootstrap();
+        String id = potConfig.getPotAppearance(this.water(state) > 0, fertilizers.length > 0 ? fertilizers[fertilizers.length - 1].type() : null);
+        ItemStack item = Hooks.getItem(id.contains(":") ? id : "nexo:" + id);
+        if (item == null) {
+            return;
+        }
+
+        ItemDisplay entity = location.getWorld().spawn(location.add(0, 1, 0), ItemDisplay.class, CreatureSpawnEvent.SpawnReason.CUSTOM, (ItemDisplay itemDisplay) -> {
+            itemDisplay.setVisibleByDefault(false);
+            itemDisplay.setItemStack(item);
+            itemDisplay.setTransformation(new Transformation(
+                    new Vector3f(0.5f, -0.5f, 0.5f),
+                    new AxisAngle4f(0, 0, 0, 0),
+                    new Vector3f(1, 1, 1),
+                    new AxisAngle4f(0, 0, 0, 0)
+            ));
+
+            itemDisplay.setGlowing(true);
+            itemDisplay.setGlowColorOverride(Color.YELLOW);
+        });
+
+        player.showEntity(plugin, entity);
+
+        BukkitTask task = Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            entity.remove();
+            GLOWING_BLOCKS.remove(pos3);
+        }, 60L);
+
+        GLOWING_BLOCKS.put(pos3, task);
     }
 
     protected boolean tryWateringPot(Player player, Context<Player> context, CustomCropsBlockState state, EquipmentSlot hand, String itemID, PotConfig potConfig, Location potLocation, ItemStack itemInHand) {
@@ -356,6 +428,10 @@ public class PotBlock extends AbstractCustomCropsBlock {
     }
 
     private void tickPot(CustomCropsBlockState state, CustomCropsWorld<?> world, Pos3 location, boolean offline, boolean tickMode) {
+        tickPot(state, world, location, offline, tickMode, false);
+    }
+
+    public void tickPot(CustomCropsBlockState state, CustomCropsWorld<?> world, Pos3 location, boolean offline, boolean tickMode, boolean cropTick) {
         PotConfig config = config(state);
         BukkitCustomCropsPlugin plugin = BukkitCustomCropsPlugin.getInstance();
         if (config == null) {
@@ -386,7 +462,7 @@ public class PotBlock extends AbstractCustomCropsBlock {
         Location bukkitLocation = location.toLocation(bukkitWorld);
 
         if (config.isRainDropAccepted()) {
-            if (SparrowHeart.getInstance().isRainingAt(bukkitLocation.clone().add(0,1,0))) {
+            if (SparrowHeart.getInstance().isRainingAt(bukkitLocation.clone().add(0, 1, 0))) {
                 if (addWater(state, 1)) {
                     waterChanged = true;
                 }
@@ -395,7 +471,8 @@ public class PotBlock extends AbstractCustomCropsBlock {
         }
 
         if (!hasNaturalWater && config.isNearbyWaterAccepted()) {
-            outer: {
+            outer:
+            {
                 for (int i = -4; i <= 4; i++) {
                     for (int j = -4; j <= 4; j++) {
                         for (int k : new int[]{0, 1}) {
@@ -413,23 +490,28 @@ public class PotBlock extends AbstractCustomCropsBlock {
             }
         }
 
-        if (!hasNaturalWater) {
+        boolean fertilizerChanged = false;
+        if (!hasNaturalWater && cropTick) {
             int waterToLose = 1;
             Fertilizer[] fertilizers = fertilizers(state);
             for (Fertilizer fertilizer : fertilizers) {
                 FertilizerConfig fertilizerConfig = fertilizer.config();
                 if (fertilizerConfig != null) {
-                    waterToLose = fertilizerConfig.processWaterToLose(waterToLose);
+                    if (RandomUtils.generateRandomDouble(0.0d, 1.0d) < fertilizerConfig.chance()) {
+                        waterToLose = fertilizerConfig.processWaterToLose(waterToLose);
+                    }
                 }
             }
+
             if (waterToLose > 0) {
                 if (addWater(state, -waterToLose)) {
                     waterChanged = true;
                 }
             }
+
+            fertilizerChanged = tickFertilizer(state, true);
         }
 
-        boolean fertilizerChanged = tickFertilizer(state);
 
         if (fertilizerChanged || waterChanged) {
             plugin.getScheduler().sync().run(() -> updateBlockAppearance(bukkitLocation, config, water(state) != 0, fertilizers(state)), bukkitLocation);
@@ -469,9 +551,9 @@ public class PotBlock extends AbstractCustomCropsBlock {
     /**
      * Set the water for a pot
      *
-     * @param state the block state
+     * @param state  the block state
      * @param config the pot config
-     * @param water the amount of water
+     * @param water  the amount of water
      * @return whether the moisture state has been changed
      */
     public boolean water(CustomCropsBlockState state, PotConfig config, int water) {
@@ -510,7 +592,7 @@ public class PotBlock extends AbstractCustomCropsBlock {
     /**
      * Check if the fertilizer can be applied to this pot
      *
-     * @param state the block state
+     * @param state      the block state
      * @param fertilizer the fertilizer to apply
      * @return can be applied or not
      */
@@ -533,7 +615,7 @@ public class PotBlock extends AbstractCustomCropsBlock {
      * Add fertilizer to the pot
      * If the pot contains the fertilizer, the times would be reset.
      *
-     * @param state the block state
+     * @param state      the block state
      * @param fertilizer the fertilizer to apply
      * @return whether to update pot appearance
      */
@@ -564,8 +646,16 @@ public class PotBlock extends AbstractCustomCropsBlock {
         return true;
     }
 
+    public void tickFertilizer(CustomCropsBlockState state, CustomCropsBlockState cropState) {
+        tickFertilizer(state, false, cropState);
+    }
+
+    private boolean tickFertilizer(CustomCropsBlockState state, boolean potTick) {
+        return tickFertilizer(state, potTick, null);
+    }
+
     @SuppressWarnings("unchecked")
-    private boolean tickFertilizer(CustomCropsBlockState state) {
+    private boolean tickFertilizer(CustomCropsBlockState state, boolean potTick, CustomCropsBlockState cropState) {
         // no fertilizers applied
         Tag<?> fertilizerTag = state.get("fertilizers");
         if (fertilizerTag == null) {
@@ -575,14 +665,26 @@ public class PotBlock extends AbstractCustomCropsBlock {
         if (tags.isEmpty()) {
             return false;
         }
+
         List<Integer> fertilizerToRemove = new ArrayList<>();
+        CropBlock block = (CropBlock) BuiltInBlockMechanics.CROP.mechanic();
+
         for (int i = 0; i < tags.size(); i++) {
             CompoundMap map = tags.get(i).getValue();
             Fertilizer applied = tagToFertilizer(map);
-            if (applied.reduceTimes()) {
-                fertilizerToRemove.add(i);
-            } else {
-                tags.get(i).setValue(fertilizerToTag(applied));
+            FertilizerConfig config = applied.config();
+
+            ConsumeType type = potTick ? ConsumeType.GROWTH : ConsumeType.HARVEST;
+            if (config != null && (config.consumeType() == type || config.consumeType() == ConsumeType.ANY)) {
+                if (block != null && cropState != null && block.isBoneMealed(cropState)) {
+                    continue;
+                }
+
+                if (applied.reduceTimes()) {
+                    fertilizerToRemove.add(i);
+                } else {
+                    tags.get(i).setValue(fertilizerToTag(applied));
+                }
             }
         }
         // no fertilizer is used up

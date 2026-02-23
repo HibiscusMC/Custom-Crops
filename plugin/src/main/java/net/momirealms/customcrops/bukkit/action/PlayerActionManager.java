@@ -163,7 +163,7 @@ public class PlayerActionManager extends AbstractActionManager<Player> {
                 if (context.holder() == null) return;
                 if (Math.random() > chance.evaluate(context)) return;
                 final Player player = context.holder();
-                ExperienceOrb entity = player.getLocation().getWorld().spawn(player.getLocation().clone().add(0,0.5,0), ExperienceOrb.class);
+                ExperienceOrb entity = player.getLocation().getWorld().spawn(player.getLocation().clone().add(0, 0.5, 0), ExperienceOrb.class);
                 entity.setExperience((int) value.evaluate(context));
             };
         }, "mending");
@@ -366,6 +366,12 @@ public class PlayerActionManager extends AbstractActionManager<Player> {
                 MathValue<Player> pitch = MathValue.auto(section.get("pitch", 1));
                 Key key = Key.key(section.getString("key"));
                 Sound.Source source = Sound.Source.valueOf(section.getString("source", "PLAYER").toUpperCase(Locale.ENGLISH));
+                String playTo = section.getString("audience", "PLAYER")
+                        .toUpperCase();
+                if (!playTo.equalsIgnoreCase("PLAYER") && !playTo.equalsIgnoreCase("WORLD")) {
+                    plugin.getPluginLogger().warn("Invalid \"audience\" type: " + playTo + " (Options: WORLD, PLAYER)");
+                }
+
                 return context -> {
                     if (Math.random() > chance.evaluate(context)) return;
                     Sound sound = Sound.sound(
@@ -374,8 +380,16 @@ public class PlayerActionManager extends AbstractActionManager<Player> {
                             (float) volume.evaluate(context),
                             (float) pitch.evaluate(context)
                     );
-                    Audience audience = plugin.getSenderFactory().getAudience(context.holder());
-                    AdventureHelper.playSound(audience, sound);
+
+                    if (playTo.equalsIgnoreCase("WORLD")) {
+                        Player player = context.holder();
+
+                        Location loc = player.getLocation();
+                        loc.getWorld().playSound(sound, loc.getX(), loc.getY(), loc.getZ());
+                    } else {
+                        Audience audience = plugin.getSenderFactory().getAudience(context.holder());
+                        AdventureHelper.playSound(audience, sound);
+                    }
                 };
             } else {
                 plugin.getPluginLogger().warn("Invalid value type: " + args.getClass().getSimpleName() + " found at sound action which is expected to be `Section`");
@@ -465,8 +479,10 @@ public class PlayerActionManager extends AbstractActionManager<Player> {
                 if (slot == null) {
                     SparrowHeart.getInstance().swingHand(context.holder(), arg ? HandSlot.MAIN : HandSlot.OFF);
                 } else {
-                    if (slot == EquipmentSlot.HAND)  SparrowHeart.getInstance().swingHand(context.holder(), HandSlot.MAIN);
-                    if (slot == EquipmentSlot.OFF_HAND)  SparrowHeart.getInstance().swingHand(context.holder(), HandSlot.OFF);
+                    if (slot == EquipmentSlot.HAND)
+                        SparrowHeart.getInstance().swingHand(context.holder(), HandSlot.MAIN);
+                    if (slot == EquipmentSlot.OFF_HAND)
+                        SparrowHeart.getInstance().swingHand(context.holder(), HandSlot.OFF);
                 }
             };
         }, "swing-hand");

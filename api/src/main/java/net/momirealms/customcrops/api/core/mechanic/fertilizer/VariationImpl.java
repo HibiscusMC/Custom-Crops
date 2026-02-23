@@ -48,6 +48,11 @@ public class VariationImpl extends AbstractFertilizerConfig implements Variation
     }
 
     @Override
+    public ConsumeType consumeType() {
+        return ConsumeType.ANY;
+    }
+
+    @Override
     public double chanceBonus() {
         return chance;
     }

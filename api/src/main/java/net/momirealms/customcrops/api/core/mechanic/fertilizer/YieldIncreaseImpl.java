@@ -47,6 +47,11 @@ public class YieldIncreaseImpl extends AbstractFertilizerConfig implements Yield
     }
 
     @Override
+    public ConsumeType consumeType() {
+        return ConsumeType.HARVEST;
+    }
+
+    @Override
     public int amountBonus() {
         for (Pair<Double, Integer> pair : chances) {
             if (Math.random() < pair.left()) {

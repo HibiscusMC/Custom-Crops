@@ -9,6 +9,7 @@ repositories {
     maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
     maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
     maven("https://repo.momirealms.net/releases/")
+    maven("https://repo.hibiscusmc.com/releases/")
 }
 
 dependencies {
@@ -35,6 +36,7 @@ dependencies {
     compileOnly("net.objecthunter:exp4j:${rootProject.properties["exp4j_version"]}")
     compileOnly("com.google.guava:guava:${rootProject.properties["guava_version"]}")
     compileOnly("io.netty:netty-all:${rootProject.properties["netty_version"]}.Final")
+    compileOnly("me.lojosho:HibiscusCommons:0.8.3")
 }
 
 java {

@@ -45,6 +45,11 @@ public class SoilRetainImpl extends AbstractFertilizerConfig implements SoilReta
     }
 
     @Override
+    public ConsumeType consumeType() {
+        return ConsumeType.GROWTH;
+    }
+
+    @Override
     public double chance() {
         return chance;
     }

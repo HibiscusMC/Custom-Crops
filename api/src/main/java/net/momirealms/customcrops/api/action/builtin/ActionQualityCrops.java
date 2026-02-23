@@ -22,6 +22,7 @@ import net.momirealms.customcrops.api.BukkitCustomCropsPlugin;
 import net.momirealms.customcrops.api.context.Context;
 import net.momirealms.customcrops.api.context.ContextKeys;
 import net.momirealms.customcrops.api.core.ConfigManager;
+import net.momirealms.customcrops.api.core.block.CropBlock;
 import net.momirealms.customcrops.api.core.block.PotBlock;
 import net.momirealms.customcrops.api.core.mechanic.fertilizer.Fertilizer;
 import net.momirealms.customcrops.api.core.mechanic.fertilizer.FertilizerConfig;
@@ -116,25 +117,35 @@ public class ActionQualityCrops<T> extends AbstractBuiltInAction<T> {
 
         double[][] unparsedRatios = new double[3][];
         boolean useCustomRatios = false;
+        boolean wasBoneMealed = false;
 
         Pos3 pos3 = Pos3.from(location);
         Fertilizer[] fertilizers = null;
         Pos3 potLocation = pos3.add(0, -1, 0);
-        Optional<CustomCropsChunk> chunk = world.get().getChunk(potLocation.toChunkPos());
-        if (chunk.isPresent()) {
-            Optional<CustomCropsBlockState> state = chunk.get().getBlockState(potLocation);
-            if (state.isPresent()) {
-                if (state.get().type() instanceof PotBlock potBlock) {
-                    double[] unparsedBlockRatios = potBlock.config(state.get()).unparsedRatios();
-                    if (unparsedBlockRatios != null) {
-                        useCustomRatios = true;
-                        unparsedRatios[0] = unparsedBlockRatios;
-                    }
+        CustomCropsChunk chunk = world.get().getChunk(potLocation.toChunkPos())
+                .orElse(null);
+        if (chunk != null) {
+            CustomCropsBlockState state = chunk.getBlockState(potLocation)
+                    .orElse(null);
 
-                    fertilizers = potBlock.fertilizers(state.get());
+            if (state != null && state.type() instanceof PotBlock potBlock) {
+                double[] unparsedBlockRatios = potBlock.config(state).unparsedRatios();
+                if (unparsedBlockRatios != null) {
+                    useCustomRatios = true;
+                    unparsedRatios[0] = unparsedBlockRatios;
                 }
+
+                fertilizers = potBlock.fertilizers(state);
+            }
+
+            CustomCropsBlockState cropState = chunk.getBlockState(pos3)
+                    .orElse(null);
+
+            if (cropState != null && cropState.type() instanceof CropBlock cropBlock) {
+                wasBoneMealed = cropBlock.isBoneMealed(cropState);
             }
         }
+
         ArrayList<FertilizerConfig> configs = new ArrayList<>();
         if (fertilizers != null) {
             for (Fertilizer fertilizer : fertilizers) {
@@ -150,21 +161,15 @@ public class ActionQualityCrops<T> extends AbstractBuiltInAction<T> {
             }
 
             randomAmount = config.processDroppedItemAmount(randomAmount);
-            double[] newRatio = config.overrideQualityRatio();
-            if (newRatio != null) {
-                ratio = newRatio;
-            }
         }
 
-        if (useCustomRatios) {
+        if (useCustomRatios && !wasBoneMealed) {
             ratio = plugin.getConfigManager().getQualityRatio(unparsedRatios);
         }
 
         ArrayList<ItemStack> droppedItems = new ArrayList<>();
         outer:
-        for (
-                int i = 0;
-                i < randomAmount; i++) {
+        for (int i = 0; i < randomAmount; i++) {
             double r1 = Math.random();
             for (int j = 0; j < ratio.length; j++) {
                 if (r1 < ratio[j]) {

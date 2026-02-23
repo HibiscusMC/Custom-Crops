@@ -43,6 +43,12 @@ public interface FertilizerConfig {
     FertilizerType type();
 
     /**
+     * The type of consumption of this fertilizer
+     * @return The {@link ConsumeType} of this fertilizer
+     */
+    ConsumeType consumeType();
+
+    /**
      * Determines whether the fertilizer should be used before planting crops.
      *
      * @return True if the fertilizer is applied before planting, false otherwise.
@@ -146,4 +152,6 @@ public interface FertilizerConfig {
     double[] overrideQualityRatio();
 
     double[] unparsedRatios();
+
+    double chance();
 }

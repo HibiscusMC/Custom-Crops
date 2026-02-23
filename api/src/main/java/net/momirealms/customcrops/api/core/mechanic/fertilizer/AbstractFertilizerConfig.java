@@ -132,6 +132,11 @@ public abstract class AbstractFertilizerConfig implements FertilizerConfig {
     }
 
     @Override
+    public double chance() {
+        return 0.0f;
+    }
+
+    @Override
     public double[] unparsedRatios() {
         return null;
     }
