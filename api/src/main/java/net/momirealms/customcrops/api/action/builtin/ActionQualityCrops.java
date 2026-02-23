@@ -30,6 +30,7 @@ import net.momirealms.customcrops.api.core.world.CustomCropsBlockState;
 import net.momirealms.customcrops.api.core.world.CustomCropsChunk;
 import net.momirealms.customcrops.api.core.world.CustomCropsWorld;
 import net.momirealms.customcrops.api.core.world.Pos3;
+import net.momirealms.customcrops.api.event.PreQualityRatioGenerateEvent;
 import net.momirealms.customcrops.api.event.QualityCropActionEvent;
 import net.momirealms.customcrops.api.misc.value.MathValue;
 import net.momirealms.customcrops.api.util.EventUtils;
@@ -44,7 +45,6 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -115,7 +115,7 @@ public class ActionQualityCrops<T> extends AbstractBuiltInAction<T> {
             return List.of();
         }
 
-        double[][] unparsedRatios = new double[3][];
+        List<double[]> unparsedRatios = new ArrayList<>();
         boolean useCustomRatios = false;
         boolean wasBoneMealed = false;
 
@@ -132,7 +132,7 @@ public class ActionQualityCrops<T> extends AbstractBuiltInAction<T> {
                 double[] unparsedBlockRatios = potBlock.config(state).unparsedRatios();
                 if (unparsedBlockRatios != null) {
                     useCustomRatios = true;
-                    unparsedRatios[0] = unparsedBlockRatios;
+                    unparsedRatios.add(unparsedBlockRatios);
                 }
 
                 fertilizers = potBlock.fertilizers(state);
@@ -157,14 +157,17 @@ public class ActionQualityCrops<T> extends AbstractBuiltInAction<T> {
             double[] unparsedFertilizerRatios = config.unparsedRatios();
             if (unparsedFertilizerRatios != null) {
                 useCustomRatios = true;
-                unparsedRatios[1] = unparsedFertilizerRatios;
+                unparsedRatios.add(unparsedFertilizerRatios);
             }
 
             randomAmount = config.processDroppedItemAmount(randomAmount);
         }
 
         if (useCustomRatios && !wasBoneMealed) {
-            ratio = plugin.getConfigManager().getQualityRatio(unparsedRatios);
+            PreQualityRatioGenerateEvent actionEvent = new PreQualityRatioGenerateEvent(qualityLoots[0].toLowerCase(), player, unparsedRatios);
+            EventUtils.fireAndForget(actionEvent);
+
+            ratio = plugin.getConfigManager().getQualityRatio(unparsedRatios.toArray(new double[unparsedRatios.size()][]));
         }
 
         ArrayList<ItemStack> droppedItems = new ArrayList<>();
