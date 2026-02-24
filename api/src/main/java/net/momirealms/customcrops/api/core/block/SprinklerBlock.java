@@ -19,6 +19,7 @@ package net.momirealms.customcrops.api.core.block;
 
 import com.flowpowered.nbt.IntTag;
 import com.flowpowered.nbt.Tag;
+import me.lojosho.hibiscuscommons.hooks.Hooks;
 import net.momirealms.customcrops.api.BukkitCustomCropsPlugin;
 import net.momirealms.customcrops.api.action.ActionManager;
 import net.momirealms.customcrops.api.context.Context;
@@ -44,18 +45,24 @@ import net.momirealms.customcrops.api.util.EventUtils;
 import net.momirealms.customcrops.api.util.LocationUtils;
 import net.momirealms.customcrops.api.util.PlayerUtils;
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.SoundCategory;
 import org.bukkit.World;
+import org.bukkit.entity.ItemDisplay;
 import org.bukkit.entity.Player;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.Transformation;
 import org.jetbrains.annotations.NotNull;
+import org.joml.AxisAngle4f;
+import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -79,6 +86,9 @@ public class SprinklerBlock extends AbstractCustomCropsBlock {
      * {@link BukkitTask} - The bukkit task associated with this sprinkler effect
      */
     private final static Map<Pos3, BukkitTask> SPRINKLER_TASKS
+            = new HashMap<>();
+
+    private final static Map<Pos3, BukkitTask> GLOWING_BLOCKS
             = new HashMap<>();
 
     // Hibiscus end
@@ -280,6 +290,40 @@ public class SprinklerBlock extends AbstractCustomCropsBlock {
         ItemStack itemInHand = event.itemInHand();
 
         context.arg(ContextKeys.STORAGE, config.storage());
+
+
+        Pos3 pos3 = Pos3.from(location);
+        if (!GLOWING_BLOCKS.containsKey(pos3)) {
+            Plugin plugin = BukkitCustomCropsPlugin.getInstance().getBootstrap();
+            String id = water(state) > 0 ? config.threeDItemWithWater() : config.threeDItem();
+            ItemStack item = Hooks.getItem(id.contains(":") ? id : "nexo:" + id);
+            if (item == null) {
+                return;
+            }
+
+            ItemDisplay entity = location.getWorld().spawn(event.location(), ItemDisplay.class, CreatureSpawnEvent.SpawnReason.CUSTOM, (ItemDisplay itemDisplay) -> {
+                itemDisplay.setVisibleByDefault(false);
+                itemDisplay.setItemStack(item);
+                itemDisplay.setTransformation(new Transformation(
+                        new Vector3f(0, 0, 0),
+                        new AxisAngle4f(0, 0, 0, 0),
+                        new Vector3f(0.999f, 0.999f, 0.999f),
+                        new AxisAngle4f(0, 0, 0, 0)
+                ));
+
+                itemDisplay.setGlowing(true);
+                itemDisplay.setGlowColorOverride(Color.YELLOW);
+            });
+
+            player.showEntity(plugin, entity);
+
+            BukkitTask task = Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                entity.remove();
+                GLOWING_BLOCKS.remove(pos3);
+            }, 60L);
+
+            GLOWING_BLOCKS.put(pos3, task);
+        }
 
         if (!config.infinite()) {
             for (WateringMethod method : config.wateringMethods()) {
