@@ -366,10 +366,8 @@ public class PlayerActionManager extends AbstractActionManager<Player> {
             if (args instanceof Section section) {
                 MathValue<Player> volume = MathValue.auto(section.get("volume", 1));
                 MathValue<Player> pitch = MathValue.auto(section.get("pitch", 1));
-                @Subst("minecraft:key") String rawKey = section.getString("key");
-                Key key = Key.key(rawKey);
+                @Subst("minecraft:key") String key = section.getString("key");
                 String rawSource = section.getString("source", "PLAYER").toUpperCase();
-                Sound.Source source = Sound.Source.valueOf(rawSource);
                 String playTo = section.getString("audience", "PLAYER")
                         .toUpperCase();
                 if (!playTo.equalsIgnoreCase("PLAYER") && !playTo.equalsIgnoreCase("WORLD")) {
@@ -378,22 +376,25 @@ public class PlayerActionManager extends AbstractActionManager<Player> {
 
                 return context -> {
                     if (Math.random() > chance.evaluate(context)) return;
-                    Sound sound = Sound.sound(
-                            key,
-                            source,
-                            (float) volume.evaluate(context),
-                            (float) pitch.evaluate(context)
-                    );
+
+                    float parsedVolume = (float) volume.evaluate(context);
+                    float parsedPitch = (float) pitch.evaluate(context);
 
                     if (playTo.equalsIgnoreCase("WORLD")) {
                         Player player = context.holder();
 
                         Location loc = player.getLocation();
                         loc.getWorld().playSound(
-                                loc, rawKey, SoundCategory.valueOf(rawSource),
-                                sound.volume(), sound.pitch()
+                                loc, key, SoundCategory.valueOf(rawSource),
+                                parsedVolume, parsedPitch
                         );
                     } else {
+                        Sound sound = Sound.sound(
+                                Key.key(key),
+                                Sound.Source.valueOf(rawSource),
+                                parsedVolume, parsedPitch
+                        );
+
                         Audience audience = plugin.getSenderFactory().getAudience(context.holder());
                         AdventureHelper.playSound(audience, sound);
                     }
