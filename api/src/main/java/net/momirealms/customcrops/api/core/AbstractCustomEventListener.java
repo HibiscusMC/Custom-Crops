@@ -22,6 +22,8 @@ import net.momirealms.customcrops.api.BukkitCustomCropsPlugin;
 import net.momirealms.customcrops.api.action.ActionManager;
 import net.momirealms.customcrops.api.context.Context;
 import net.momirealms.customcrops.api.core.block.CropBlock;
+import net.momirealms.customcrops.api.core.block.CustomCropsBlock;
+import net.momirealms.customcrops.api.core.block.PotBlock;
 import net.momirealms.customcrops.api.core.mechanic.crop.BoneMeal;
 import net.momirealms.customcrops.api.core.mechanic.crop.CropConfig;
 import net.momirealms.customcrops.api.core.mechanic.crop.CropStageConfig;
@@ -241,7 +243,7 @@ public abstract class AbstractCustomEventListener implements Listener {
         Block block = event.getBlock();
         if (block.getType() == Material.FARMLAND) {
             Pos3 pos3 = Pos3.from(block.getLocation());
-            Pos3 above = pos3.add(0,1,0);
+            Pos3 above = pos3.add(0, 1, 0);
             Optional<CustomCropsWorld<?>> optionalWorld = BukkitCustomCropsPlugin.getInstance().getWorldManager().getWorld(block.getWorld());
             if (optionalWorld.isPresent()) {
                 CustomCropsWorld<?> world = optionalWorld.get();
@@ -289,7 +291,7 @@ public abstract class AbstractCustomEventListener implements Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     public void onPistonExtend(BlockPistonExtendEvent event) {
         Optional<CustomCropsWorld<?>> world = BukkitCustomCropsPlugin.getInstance().getWorldManager().getWorld(event.getBlock().getWorld());
-        if (world.isEmpty()){
+        if (world.isEmpty()) {
             return;
         }
         CustomCropsWorld<?> w = world.get();
@@ -305,7 +307,7 @@ public abstract class AbstractCustomEventListener implements Listener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGH)
     public void onPistonRetract(BlockPistonRetractEvent event) {
         Optional<CustomCropsWorld<?>> world = BukkitCustomCropsPlugin.getInstance().getWorldManager().getWorld(event.getBlock().getWorld());
-        if (world.isEmpty()){
+        if (world.isEmpty()) {
             return;
         }
         CustomCropsWorld<?> w = world.get();
@@ -327,7 +329,7 @@ public abstract class AbstractCustomEventListener implements Listener {
         }
     }
 
-    @EventHandler (ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void onExplosion(EntityExplodeEvent event) {
         if (!this.explosionIndicator.canDestroyBlocks(event)) {
             return;
@@ -373,7 +375,7 @@ public abstract class AbstractCustomEventListener implements Listener {
             return;
         }
         Optional<CustomCropsWorld<?>> optionalWorld = BukkitCustomCropsPlugin.getInstance().getWorldManager().getWorld(event.getBlock().getWorld());
-        if (optionalWorld.isEmpty()){
+        if (optionalWorld.isEmpty()) {
             return;
         }
         CustomCropsWorld<?> world = optionalWorld.get();
@@ -396,6 +398,22 @@ public abstract class AbstractCustomEventListener implements Listener {
                             if (block.getState() instanceof Dispenser dispenser) {
                                 event.setCancelled(true);
                                 Inventory inventory = dispenser.getInventory();
+
+                                Location potLocation = location.clone().subtract(0, 1, 0);
+                                String blockBelowID = BukkitCustomCropsPlugin.getInstance().getItemManager().blockID(potLocation.getBlock());
+                                PotConfig potConfig = Registries.ITEM_TO_POT.get(blockBelowID);
+                                PotBlock potBlock = null;
+                                CustomCropsBlockState potState = null;
+
+                                if (potConfig != null) {
+                                    potState = world.getLoadedBlockState(Pos3.from(potLocation)).orElse(null);
+                                    if (potState != null) {
+                                        if (potState.type() instanceof PotBlock pot) {
+                                            potBlock = pot;
+                                        }
+                                    }
+                                }
+
                                 for (ItemStack storage : inventory.getStorageContents()) {
                                     if (storage == null) continue;
                                     String id = itemManager.id(storage);
@@ -411,6 +429,10 @@ public abstract class AbstractCustomEventListener implements Listener {
                                             CropStageConfig stage = cropConfig.stageByPoint(i);
                                             if (stage != null) {
                                                 ActionManager.trigger(blockContext, stage.growActions());
+
+                                                if (potState != null && potBlock != null) {
+                                                    potBlock.tickFertilizer(potState, true);
+                                                }
                                             }
                                         }
                                         CropStageConfig currentStage = cropConfig.stageWithModelByPoint(point);
@@ -446,6 +468,7 @@ public abstract class AbstractCustomEventListener implements Listener {
             public boolean isCancelled() {
                 return false;
             }
+
             @Override
             public void setCancelled(boolean b) {
             }

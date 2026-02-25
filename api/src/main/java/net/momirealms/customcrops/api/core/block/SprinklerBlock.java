@@ -320,7 +320,8 @@ public class SprinklerBlock extends AbstractCustomCropsBlock {
             BukkitTask task = Bukkit.getScheduler().runTaskLater(plugin, () -> {
                 entity.remove();
                 GLOWING_BLOCKS.remove(pos3);
-            }, 60L);
+            }, 40L);
+
 
             GLOWING_BLOCKS.put(pos3, task);
         }

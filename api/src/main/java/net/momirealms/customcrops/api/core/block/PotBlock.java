@@ -355,7 +355,7 @@ public class PotBlock extends AbstractCustomCropsBlock {
         BukkitTask task = Bukkit.getScheduler().runTaskLater(plugin, () -> {
             entity.remove();
             GLOWING_BLOCKS.remove(pos3);
-        }, 60L);
+        }, 40L);
 
         GLOWING_BLOCKS.put(pos3, task);
     }
@@ -641,16 +641,8 @@ public class PotBlock extends AbstractCustomCropsBlock {
         return true;
     }
 
-    public void tickFertilizer(CustomCropsBlockState state, CustomCropsBlockState cropState) {
-        tickFertilizer(state, false, cropState);
-    }
-
-    private boolean tickFertilizer(CustomCropsBlockState state, boolean potTick) {
-        return tickFertilizer(state, potTick, null);
-    }
-
     @SuppressWarnings("unchecked")
-    private boolean tickFertilizer(CustomCropsBlockState state, boolean potTick, CustomCropsBlockState cropState) {
+    public boolean tickFertilizer(CustomCropsBlockState state, boolean potTick) {
         // no fertilizers applied
         Tag<?> fertilizerTag = state.get("fertilizers");
         if (fertilizerTag == null) {
@@ -662,7 +654,6 @@ public class PotBlock extends AbstractCustomCropsBlock {
         }
 
         List<Integer> fertilizerToRemove = new ArrayList<>();
-        CropBlock block = (CropBlock) BuiltInBlockMechanics.CROP.mechanic();
 
         for (int i = 0; i < tags.size(); i++) {
             CompoundMap map = tags.get(i).getValue();
@@ -671,10 +662,6 @@ public class PotBlock extends AbstractCustomCropsBlock {
 
             ConsumeType type = potTick ? ConsumeType.GROWTH : ConsumeType.HARVEST;
             if (config != null && (config.consumeType() == type || config.consumeType() == ConsumeType.ANY)) {
-                if (block != null && cropState != null && block.isBoneMealed(cropState)) {
-                    continue;
-                }
-
                 if (applied.reduceTimes()) {
                     fertilizerToRemove.add(i);
                 } else {

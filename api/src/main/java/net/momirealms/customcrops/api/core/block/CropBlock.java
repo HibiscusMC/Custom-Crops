@@ -152,7 +152,7 @@ public class CropBlock extends AbstractCustomCropsBlock {
         }
 
         if (potBlock != null && potState != null) {
-            potBlock.tickFertilizer(potState, state);
+            potBlock.tickFertilizer(potState, false);
         }
     }
 
@@ -284,6 +284,12 @@ public class CropBlock extends AbstractCustomCropsBlock {
 
                     int afterPoints = Math.min(point + boneMeal.rollPoint(), cropConfig.maxPoints());
                     point(state, afterPoints);
+
+                    if (potBlock != null && potState != null) {
+                        for (int i = point + 1; i <= afterPoints; i++) {
+                            potBlock.tickFertilizer(potState, true);
+                        }
+                    }
 
                     CropStageConfig nextStage = cropConfig.stageWithModelByPoint(afterPoints);
 
