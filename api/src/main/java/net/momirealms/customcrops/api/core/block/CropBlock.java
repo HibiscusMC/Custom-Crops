@@ -319,6 +319,10 @@ public class CropBlock extends AbstractCustomCropsBlock {
                     return;
                 }
             }
+        } else {
+            if (potBlock != null && potState != null) {
+                potBlock.tickFertilizer(potState, false);
+            }
         }
 
         ActionManager.trigger(context, cropConfig.interactActions());
