@@ -40,9 +40,10 @@ public class SpeedGrowImpl extends AbstractFertilizerConfig implements SpeedGrow
             Action<Player>[] beforePlantActions,
             Action<Player>[] useActions,
             Action<Player>[] wrongPotActions,
-            List<Pair<Double, Integer>> chances
+            List<Pair<Double, Integer>> chances,
+            Action<Player>[] maxTimesAction
     ) {
-        super(id, itemID, times, icon, beforePlant, whitelistPots, requirements, beforePlantActions, useActions, wrongPotActions);
+        super(id, itemID, times, icon, beforePlant, whitelistPots, requirements, beforePlantActions, useActions, wrongPotActions, maxTimesAction);
         this.chances = chances;
     }
 

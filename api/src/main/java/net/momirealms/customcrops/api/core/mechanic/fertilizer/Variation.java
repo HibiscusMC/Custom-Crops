@@ -41,8 +41,9 @@ public interface Variation extends FertilizerConfig {
             Action<Player>[] useActions,
             Action<Player>[] wrongPotActions,
             boolean addOrMultiply,
-            double chance
+            double chance,
+            Action<Player>[] maxTimesAction
     ) {
-        return new VariationImpl(id, itemID, times, icon, beforePlant, whitelistPots, requirements, beforePlantActions, useActions, wrongPotActions, addOrMultiply, chance);
+        return new VariationImpl(id, itemID, times, icon, beforePlant, whitelistPots, requirements, beforePlantActions, useActions, wrongPotActions, addOrMultiply, chance, maxTimesAction);
     }
 }

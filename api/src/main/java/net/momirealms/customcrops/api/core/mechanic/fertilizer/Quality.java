@@ -44,8 +44,9 @@ public interface Quality extends FertilizerConfig {
             Action<Player>[] wrongPotActions,
             double chance,
             double[] ratio,
-            double[] unparsedRatio
+            double[] unparsedRatio,
+            Action<Player>[] maxTimesAction
     ) {
-        return new QualityImpl(id, itemID, times, icon, beforePlant, whitelistPots, requirements, beforePlantActions, useActions, wrongPotActions, chance, ratio, unparsedRatio);
+        return new QualityImpl(id, itemID, times, icon, beforePlant, whitelistPots, requirements, beforePlantActions, useActions, wrongPotActions, chance, ratio, unparsedRatio, maxTimesAction);
     }
 }

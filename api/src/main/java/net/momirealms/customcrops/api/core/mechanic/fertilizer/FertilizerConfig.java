@@ -44,6 +44,7 @@ public interface FertilizerConfig {
 
     /**
      * The type of consumption of this fertilizer
+     *
      * @return The {@link ConsumeType} of this fertilizer
      */
     ConsumeType consumeType();
@@ -154,4 +155,6 @@ public interface FertilizerConfig {
     double[] unparsedRatios();
 
     double chance();
+
+    Action<Player>[] maxTimesAction();
 }

@@ -42,9 +42,10 @@ public class QualityImpl extends AbstractFertilizerConfig implements Quality {
             Action<Player>[] wrongPotActions,
             double chance,
             double[] ratio,
-            double[] unparsedRatio
+            double[] unparsedRatio,
+            Action<Player>[] maxTimesAction
     ) {
-        super(id, itemID, times, icon, beforePlant, whitelistPots, requirements, beforePlantActions, useActions, wrongPotActions);
+        super(id, itemID, times, icon, beforePlant, whitelistPots, requirements, beforePlantActions, useActions, wrongPotActions, maxTimesAction);
         this.chance = chance;
         this.ratio = ratio;
         this.unparsedRatio = unparsedRatio;

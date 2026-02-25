@@ -38,8 +38,9 @@ public interface SoilRetain extends FertilizerConfig {
             Action<Player>[] beforePlantActions,
             Action<Player>[] useActions,
             Action<Player>[] wrongPotActions,
-            double chance
+            double chance,
+            Action<Player>[] maxTimesAction
     ) {
-        return new SoilRetainImpl(id, itemID, times, icon, beforePlant, whitelistPots, requirements, beforePlantActions, useActions, wrongPotActions, chance);
+        return new SoilRetainImpl(id, itemID, times, icon, beforePlant, whitelistPots, requirements, beforePlantActions, useActions, wrongPotActions, chance, maxTimesAction);
     }
 }

@@ -40,9 +40,10 @@ public class VariationImpl extends AbstractFertilizerConfig implements Variation
             Action<Player>[] useActions,
             Action<Player>[] wrongPotActions,
             boolean addOrMultiply,
-            double chance
+            double chance,
+            Action<Player>[] maxTimesAction
     ) {
-        super(id, itemID, times, icon, beforePlant, whitelistPots, requirements, beforePlantActions, useActions, wrongPotActions);
+        super(id, itemID, times, icon, beforePlant, whitelistPots, requirements, beforePlantActions, useActions, wrongPotActions, maxTimesAction);
         this.chance = chance;
         this.addOrMultiply = addOrMultiply;
     }

@@ -41,7 +41,8 @@ public class FertilizerType {
                         pam.parseActions(section.getSection("events.before_plant")),
                         pam.parseActions(section.getSection("events.use")),
                         pam.parseActions(section.getSection("events.wrong_pot")),
-                        manager.getIntChancePair(section.getSection("chance"))
+                        manager.getIntChancePair(section.getSection("chance")),
+                        pam.parseActions(section.getSection("events.max_times"))
                 );
             }
     );
@@ -59,7 +60,8 @@ public class FertilizerType {
                         pam.parseActions(section.getSection("events.wrong_pot")),
                         section.getDouble("chance", 1d),
                         manager.getQualityRatio(section.getString("ratio")),
-                        manager.parseQualityRatios(section.getString("ratio"))
+                        manager.parseQualityRatios(section.getString("ratio")),
+                        pam.parseActions(section.getSection("events.max_times"))
                 );
             }
     );
@@ -75,7 +77,8 @@ public class FertilizerType {
                         pam.parseActions(section.getSection("events.before_plant")),
                         pam.parseActions(section.getSection("events.use")),
                         pam.parseActions(section.getSection("events.wrong_pot")),
-                        section.getDouble("chance", 1d)
+                        section.getDouble("chance", 1d),
+                        pam.parseActions(section.getSection("events.max_times"))
                 );
             }
     );
@@ -92,7 +95,8 @@ public class FertilizerType {
                         pam.parseActions(section.getSection("events.use")),
                         pam.parseActions(section.getSection("events.wrong_pot")),
                         section.getBoolean("addOrMultiply", true),
-                        section.getDouble("chance", 0.01d)
+                        section.getDouble("chance", 0.01d),
+                        pam.parseActions(section.getSection("events.max_times"))
                 );
             }
     );
@@ -108,7 +112,8 @@ public class FertilizerType {
                         pam.parseActions(section.getSection("events.before_plant")),
                         pam.parseActions(section.getSection("events.use")),
                         pam.parseActions(section.getSection("events.wrong_pot")),
-                        manager.getIntChancePair(section.getSection("chance"))
+                        manager.getIntChancePair(section.getSection("chance")),
+                        pam.parseActions(section.getSection("events.max_times"))
                 );
             }
     );

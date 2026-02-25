@@ -73,7 +73,7 @@ public class FertilizerItem extends AbstractCustomCropsItem {
         List<CropConfig> cropConfigs = Registries.STAGE_TO_CROP_UNSAFE.get(event.relatedID());
         if (cropConfigs != null) {
             // is a crop
-            targetLocation = targetLocation.subtract(0,1,0);
+            targetLocation = targetLocation.subtract(0, 1, 0);
             targetBlockID = BukkitCustomCropsPlugin.getInstance().getItemManager().blockID(targetLocation);
         }
 
@@ -99,7 +99,7 @@ public class FertilizerItem extends AbstractCustomCropsItem {
             }
             // check "before-plant"
             if (fertilizerConfig.beforePlant()) {
-                Location cropLocation = targetLocation.clone().add(0,1,0);
+                Location cropLocation = targetLocation.clone().add(0, 1, 0);
                 Optional<CustomCropsBlockState> state = world.getBlockState(Pos3.from(cropLocation));
                 if (state.isPresent()) {
                     CustomCropsBlockState blockState = state.get();
@@ -121,6 +121,17 @@ public class FertilizerItem extends AbstractCustomCropsItem {
             if (!potBlock.canApplyFertilizer(potState, fertilizer)) {
                 ActionManager.trigger(context, potConfig.maxFertilizerActions());
                 return InteractionResult.COMPLETE;
+            }
+            Fertilizer[] fertilizers = potBlock.fertilizers(potState);
+            for (Fertilizer potFertilizer : fertilizers) {
+                if (!potFertilizer.id().equals(fertilizer.id())) {
+                    continue;
+                }
+
+                if (potFertilizer.times() >= fertilizerConfig.times()) {
+                    ActionManager.trigger(context, fertilizerConfig.maxTimesAction());
+                    return InteractionResult.COMPLETE;
+                }
             }
             // trigger event
             FertilizerUseEvent useEvent = new FertilizerUseEvent(player, itemInHand, fertilizer, targetLocation, potState, event.hand(), potConfig);

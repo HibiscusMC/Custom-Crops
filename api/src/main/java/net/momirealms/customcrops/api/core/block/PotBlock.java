@@ -504,19 +504,14 @@ public class PotBlock extends AbstractCustomCropsBlock {
             }
 
             if (waterToLose > 0) {
-                if (addWater(state, -waterToLose)) {
-                    waterChanged = true;
-                }
+                addWater(state, -waterToLose);
             }
 
-            fertilizerChanged = tickFertilizer(state, true);
+            tickFertilizer(state, true);
         }
 
 
-        if (fertilizerChanged || waterChanged) {
-            plugin.getScheduler().sync().run(() -> updateBlockAppearance(bukkitLocation, config, water(state) != 0, fertilizers(state)), bukkitLocation);
-        }
-
+        plugin.getScheduler().sync().run(() -> updateBlockAppearance(bukkitLocation, config, water(state) != 0, fertilizers(state)), bukkitLocation);
         ActionManager.trigger(Context.block(state, bukkitLocation).arg(ContextKeys.OFFLINE, offline), config.tickActions());
     }
 

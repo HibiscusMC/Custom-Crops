@@ -40,8 +40,9 @@ public interface YieldIncrease extends FertilizerConfig {
             Action<Player>[] beforePlantActions,
             Action<Player>[] useActions,
             Action<Player>[] wrongPotActions,
-            List<Pair<Double, Integer>> chances
+            List<Pair<Double, Integer>> chances,
+            Action<Player>[] maxTimesAction
     ) {
-        return new YieldIncreaseImpl(id, itemID, times, icon, beforePlant, whitelistPots, requirements, beforePlantActions, useActions, wrongPotActions, chances);
+        return new YieldIncreaseImpl(id, itemID, times, icon, beforePlant, whitelistPots, requirements, beforePlantActions, useActions, wrongPotActions, chances, maxTimesAction);
     }
 }

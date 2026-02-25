@@ -36,6 +36,7 @@ public abstract class AbstractFertilizerConfig implements FertilizerConfig {
     protected Action<Player>[] beforePlantActions;
     protected Action<Player>[] useActions;
     protected Action<Player>[] wrongPotActions;
+    protected Action<Player>[] maxTimesAction;
 
     public AbstractFertilizerConfig(
             String id,
@@ -47,7 +48,8 @@ public abstract class AbstractFertilizerConfig implements FertilizerConfig {
             Requirement<Player>[] requirements,
             Action<Player>[] beforePlantActions,
             Action<Player>[] useActions,
-            Action<Player>[] wrongPotActions
+            Action<Player>[] wrongPotActions,
+            Action<Player>[] maxTimesAction
     ) {
         this.id = Objects.requireNonNull(id);
         this.itemID = Objects.requireNonNull(itemID);
@@ -59,6 +61,7 @@ public abstract class AbstractFertilizerConfig implements FertilizerConfig {
         this.beforePlantActions = beforePlantActions;
         this.useActions = useActions;
         this.wrongPotActions = wrongPotActions;
+        this.maxTimesAction = maxTimesAction;
     }
 
     @Override
@@ -74,6 +77,11 @@ public abstract class AbstractFertilizerConfig implements FertilizerConfig {
     @Override
     public Action<Player>[] wrongPotActions() {
         return wrongPotActions;
+    }
+
+    @Override
+    public Action<Player>[] maxTimesAction() {
+        return maxTimesAction;
     }
 
     @Override
