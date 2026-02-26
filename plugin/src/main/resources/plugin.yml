@@ -3,7 +3,7 @@ version: '${project_version}'
 main: net.momirealms.customcrops.bukkit.BukkitBootstrap
 api-version: 1.17
 load: POSTWORLD
-authors: [ XiaoMoMi ]
+authors: [ XiaoMoMi, iKztu ]
 folia-supported: true
 softdepend:
   - Vault
