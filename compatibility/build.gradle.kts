@@ -14,6 +14,7 @@ repositories {
     maven("https://repo.momirealms.net/releases/") // CustomFishing
     maven("https://repo.lukasa.lt/repository/maven-public/") // packet wrapper
     maven("https://repo.repsy.io/mvn/athlaeos/valhallammo/") // valhallammo
+    maven("https://repo.nexomc.com/releases") // nexo
 }
 
 dependencies {
@@ -55,6 +56,7 @@ dependencies {
     compileOnly("io.lumine:Mythic-Dist:5.6.2")
     compileOnly("net.momirealms:custom-fishing:2.3.3")
     compileOnly("com.github.LoneDev6:api-itemsadder:3.6.3-beta-14")
+    compileOnly("com.nexomc:nexo:1.18.0")
     // eco
     compileOnly("com.willfp:eco:6.70.1")
     compileOnly("com.willfp:EcoJobs:3.56.1")

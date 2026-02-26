@@ -45,9 +45,11 @@ public class ActionParticle<T> extends AbstractBuiltInAction<T> {
     private final int count;
     private final double extra;
     private final float scale;
-    private final ItemStack itemStack;
     private final Color color;
     private final Color toColor;
+
+    private ItemStack itemStack;
+    private String rawItemStack;
 
     public ActionParticle(
             BukkitCustomCropsPlugin plugin,
@@ -56,32 +58,38 @@ public class ActionParticle<T> extends AbstractBuiltInAction<T> {
     ) {
         super(plugin, chance);
         this.particleType = ParticleUtils.getParticle(section.getString("particle", "ASH").toUpperCase(Locale.ENGLISH));
-        this.x = section.getDouble("x",0.0);
-        this.y = section.getDouble("y",0.0);
-        this.z = section.getDouble("z",0.0);
-        this.offSetX = section.getDouble("offset-x",0.0);
-        this.offSetY = section.getDouble("offset-y",0.0);
-        this.offSetZ = section.getDouble("offset-z",0.0);
+        this.x = section.getDouble("x", 0.0);
+        this.y = section.getDouble("y", 0.0);
+        this.z = section.getDouble("z", 0.0);
+        this.offSetX = section.getDouble("offset-x", 0.0);
+        this.offSetY = section.getDouble("offset-y", 0.0);
+        this.offSetZ = section.getDouble("offset-z", 0.0);
         this.count = section.getInt("count", 1);
         this.extra = section.getDouble("extra", 0.0);
         this.scale = section.getDouble("scale", 1d).floatValue();
 
-        if (section.contains("itemStack"))
-            itemStack = BukkitCustomCropsPlugin.getInstance()
-                    .getItemManager()
-                    .build(null, section.getString("itemStack"));
-        else
-            itemStack = null;
+        if (section.contains("itemStack")) {
+            String id = section.getString("itemStack");
+            if (id.startsWith("nexo:")) {
+                rawItemStack = id;
+                itemStack = null;
+            } else {
+                rawItemStack = null;
+                itemStack = BukkitCustomCropsPlugin.getInstance()
+                        .getItemManager()
+                        .build(null, section.getString("itemStack"));
+            }
+        }
 
         if (section.contains("color")) {
-            String[] rgb = section.getString("color","255,255,255").split(",");
+            String[] rgb = section.getString("color", "255,255,255").split(",");
             color = Color.fromRGB(Integer.parseInt(rgb[0]), Integer.parseInt(rgb[1]), Integer.parseInt(rgb[2]));
         } else {
             color = null;
         }
 
         if (section.contains("color")) {
-            String[] rgb = section.getString("to-color","255,255,255").split(",");
+            String[] rgb = section.getString("to-color", "255,255,255").split(",");
             toColor = Color.fromRGB(Integer.parseInt(rgb[0]), Integer.parseInt(rgb[1]), Integer.parseInt(rgb[2]));
         } else {
             toColor = null;
@@ -92,13 +100,15 @@ public class ActionParticle<T> extends AbstractBuiltInAction<T> {
     protected void triggerAction(Context<T> context) {
         if (context.argOrDefault(ContextKeys.OFFLINE, false)) return;
         Location location = requireNonNull(context.arg(ContextKeys.LOCATION));
+        ItemStack stack = this.itemStack();
+
         location.getWorld().spawnParticle(
                 particleType,
                 location.getX() + x, location.getY() + y, location.getZ() + z,
                 count,
                 offSetX, offSetY, offSetZ,
                 extra,
-                itemStack != null ? itemStack : (color != null && toColor != null ? new Particle.DustTransition(color, toColor, scale) : (color != null ? new Particle.DustOptions(color, scale) : null))
+                stack != null ? stack : (color != null && toColor != null ? new Particle.DustTransition(color, toColor, scale) : (color != null ? new Particle.DustOptions(color, scale) : null))
         );
     }
 
@@ -144,6 +154,18 @@ public class ActionParticle<T> extends AbstractBuiltInAction<T> {
 
     @Nullable
     public ItemStack itemStack() {
+        if (itemStack != null) {
+            return itemStack;
+        }
+
+        if (rawItemStack != null) {
+            itemStack = BukkitCustomCropsPlugin.getInstance()
+                    .getItemManager()
+                    .build(null, rawItemStack);
+
+            rawItemStack = null;
+        }
+
         return itemStack;
     }
 

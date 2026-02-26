@@ -62,7 +62,7 @@ public class NexoProvider implements CustomItemProvider {
     public @Nullable Entity placeFurniture(Location location, String id) {
         Entity entity = NexoFurniture.place(id, LocationUtils.toSurfaceCenterLocation(location), Rotation.NONE, BlockFace.UP);
         if (entity == null) {
-            BukkitCustomCropsPlugin.getInstance().getPluginLogger().warn("Furniture[" + id +"] doesn't exist. Please double check if that furniture exists.");
+            BukkitCustomCropsPlugin.getInstance().getPluginLogger().warn("Furniture[" + id + "] doesn't exist. Please double check if that furniture exists.");
         }
         return entity;
     }
@@ -92,6 +92,10 @@ public class NexoProvider implements CustomItemProvider {
 
     @Override
     public @Nullable ItemStack itemStack(Player player, String id) {
+        if (id.startsWith("nexo:")) {
+            id = id.substring(5);
+        }
+
         ItemBuilder builder = NexoItems.itemFromId(id);
         if (builder == null) {
             return null;
